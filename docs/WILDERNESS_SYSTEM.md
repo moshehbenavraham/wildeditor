@@ -3,16 +3,17 @@
 ## Table of Contents
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
-3. [Coordinate System](#coordinate-system)
-4. [Terrain Generation](#terrain-generation)
-5. [Room Management](#room-management)
-6. [Regions and Paths](#regions-and-paths)
-7. [Weather System](#weather-system)
-8. [Player Experience](#player-experience)
-9. [Builder Tools](#builder-tools)
-10. [Technical Implementation](#technical-implementation)
-11. [Configuration](#configuration)
-12. [Troubleshooting](#troubleshooting)
+3. [Wilderness Editor Architecture](#wilderness-editor-architecture)
+4. [Coordinate System](#coordinate-system)
+5. [Terrain Generation](#terrain-generation)
+6. [Room Management](#room-management)
+7. [Regions and Paths](#regions-and-paths)
+8. [Weather System](#weather-system)
+9. [Player Experience](#player-experience)
+10. [Builder Tools](#builder-tools)
+11. [Technical Implementation](#technical-implementation)
+12. [Configuration](#configuration)
+13. [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -54,6 +55,92 @@ Player Movement → Coordinate Calculation → Room Lookup/Creation →
 Terrain Generation → Region/Path Application → Room Assignment → 
 Weather/Description Generation → Player Display
 ```
+
+## Wilderness Editor Architecture
+
+The Luminari Wilderness Editor provides a modern web-based interface for managing wilderness data while preserving the existing game architecture.
+
+### Separation of Concerns
+
+**React Frontend (UI Layer)**
+- Visual map editing interface
+- Drawing tools for regions, paths, and points
+- Session-based change tracking
+- User authentication via Supabase
+- Coordinate validation and display
+- Real-time visual feedback
+
+**Python Backend API (Business Logic)**
+- MySQL spatial database operations
+- Game logic validation
+- Coordinate transformations
+- Region/path spatial calculations
+- Data persistence and versioning
+- Integration with existing MUD systems
+
+### Architecture Benefits
+
+1. **Preservation of Game Logic**: All game-specific logic remains in Python/C
+2. **Modern UI**: React provides responsive, interactive editing experience
+3. **Clean Separation**: UI concerns separated from business logic
+4. **Scalability**: Backend can serve multiple editor instances
+5. **Security**: API layer provides authentication and validation
+
+### Communication Flow
+
+```
+React Editor → HTTP Request → Python API → MySQL Database
+     ↑             ↓              ↓              ↓
+     ←─── HTTP Response ←── Validation ←── Spatial Query
+```
+
+### Frontend Responsibilities
+
+- **UI State Management**: Tool selection, drawing state, zoom level
+- **Visual Rendering**: Canvas drawing, layer management, coordinate display
+- **User Input**: Mouse events, keyboard shortcuts, form inputs
+- **Session Management**: Track changes before committing to backend
+- **API Communication**: Format requests, handle responses, show errors
+
+### Backend API Responsibilities  
+
+- **Data Persistence**: Save/load regions, paths, and points
+- **Validation**: Ensure data integrity and game rule compliance
+- **Spatial Operations**: MySQL geometry functions and calculations
+- **Authentication**: Verify API tokens and user permissions
+- **Integration**: Connect with existing MUD database schema
+
+### API Contract Overview
+
+The frontend will communicate with the backend via RESTful endpoints:
+
+**Region Operations**
+- `GET /api/regions` - List all regions with filters
+- `POST /api/regions` - Create new region
+- `PUT /api/regions/{vnum}` - Update existing region
+- `DELETE /api/regions/{vnum}` - Delete region
+
+**Path Operations**
+- `GET /api/paths` - List all paths with filters
+- `POST /api/paths` - Create new path
+- `PUT /api/paths/{vnum}` - Update existing path
+- `DELETE /api/paths/{vnum}` - Delete path
+
+**Point Operations**
+- `GET /api/points` - List all point landmarks
+- `POST /api/points` - Create new point
+- `PUT /api/points/{vnum}` - Update existing point
+- `DELETE /api/points/{vnum}` - Delete point
+
+**Session Operations**
+- `GET /api/session/changes` - Get pending changes
+- `POST /api/session/commit` - Commit all changes
+- `POST /api/session/rollback` - Discard changes
+
+**Map Operations**
+- `GET /api/map/image` - Get base map image
+- `GET /api/map/at/{x}/{y}` - Get features at coordinates
+- `GET /api/map/bounds` - Get coordinate boundaries
 
 ## Coordinate System
 
@@ -650,6 +737,30 @@ buildwalk desc <description> // Set default room description
 - Rooms must have valid coordinates set
 - Exits must point to navigation room for wilderness movement
 - Static rooms should be in VNUM range 1000000-1003999
+
+### Wilderness Editor Integration
+
+The web-based Wilderness Editor streamlines the creation and management of wilderness features:
+
+**Editor Workflow:**
+1. **Load Existing Data**: Editor fetches current regions/paths from Python API
+2. **Visual Editing**: Use drawing tools to create/modify features
+3. **Preview Changes**: See pending modifications before committing
+4. **Validate Data**: Backend validates all changes against game rules
+5. **Commit to Database**: Approved changes saved to MySQL
+
+**Editor Features:**
+- **Visual Feedback**: See regions and paths overlaid on coordinate grid
+- **Coordinate Precision**: Click to place exact coordinates
+- **Bulk Operations**: Select and modify multiple features
+- **Change Tracking**: Review all modifications before saving
+- **Conflict Resolution**: Handle overlapping regions/paths
+
+**Backend Integration:**
+- Python API connects to existing MySQL spatial tables
+- Maintains compatibility with in-game commands
+- Preserves all existing game logic and validation
+- Supports both editor and in-game modifications
 
 #### Builder's Quick Guide
 
