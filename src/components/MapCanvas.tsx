@@ -28,36 +28,45 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
   // Convert game coordinates (-1024 to +1024) to canvas coordinates (0 to MAP_SIZE)
   const gameToCanvas = useCallback((coord: Coordinate): { x: number; y: number } => {
-    const scale = state.zoom / 100;
     return {
-      x: ((coord.x + COORDINATE_RANGE) / (COORDINATE_RANGE * 2)) * MAP_SIZE * scale,
-      y: ((COORDINATE_RANGE - coord.y) / (COORDINATE_RANGE * 2)) * MAP_SIZE * scale
+      x: ((coord.x + COORDINATE_RANGE) / (COORDINATE_RANGE * 2)) * MAP_SIZE,
+      y: ((COORDINATE_RANGE - coord.y) / (COORDINATE_RANGE * 2)) * MAP_SIZE
     };
-  }, [state.zoom]);
+  }, []);
 
   // Convert canvas coordinates to game coordinates
   const canvasToGame = useCallback((x: number, y: number): Coordinate => {
-    const scale = state.zoom / 100;
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
     
-    const canvasX = (x - rect.left);
-    const canvasY = (y - rect.top);
+    // Get mouse position relative to canvas
+    const canvasX = x - rect.left;
+    const canvasY = y - rect.top;
     
-    // Convert to normalized coordinates (0-1)
-    const normalizedX = canvasX / (MAP_SIZE * scale);
-    const normalizedY = canvasY / (MAP_SIZE * scale);
+    // Get actual canvas dimensions (which may be scaled by CSS)
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    // Convert to canvas pixel coordinates
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const pixelX = canvasX * scaleX;
+    const pixelY = canvasY * scaleY;
+    
+    // Convert to normalized coordinates (0-1) based on actual canvas size
+    const normalizedX = pixelX / canvas.width;
+    const normalizedY = pixelY / canvas.height;
     
     return {
       x: Math.round((normalizedX * (COORDINATE_RANGE * 2)) - COORDINATE_RANGE),
       y: Math.round(COORDINATE_RANGE - (normalizedY * (COORDINATE_RANGE * 2)))
     };
-  }, [state.zoom]);
+  }, []);
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!state.showGrid) return;
 
-    const scale = state.zoom / 100;
     const gridSize = 50; // Grid every 50 game units
     
     ctx.strokeStyle = '#374151';
@@ -69,7 +78,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       const canvasPos = gameToCanvas({ x: gameX, y: 0 });
       ctx.beginPath();
       ctx.moveTo(canvasPos.x, 0);
-      ctx.lineTo(canvasPos.x, MAP_SIZE * scale);
+      ctx.lineTo(canvasPos.x, MAP_SIZE);
       ctx.stroke();
     }
 
@@ -78,12 +87,12 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       const canvasPos = gameToCanvas({ x: 0, y: gameY });
       ctx.beginPath();
       ctx.moveTo(0, canvasPos.y);
-      ctx.lineTo(MAP_SIZE * scale, canvasPos.y);
+      ctx.lineTo(MAP_SIZE, canvasPos.y);
       ctx.stroke();
     }
 
     ctx.setLineDash([]);
-  }, [state.showGrid, state.zoom, gameToCanvas]);
+  }, [state.showGrid, gameToCanvas]);
 
   const drawRegion = useCallback((ctx: CanvasRenderingContext2D, region: Region) => {
     if (!state.showRegions || region.coordinates.length < 3) return;
@@ -224,6 +233,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     ctx.fillStyle = '#1F2937';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Scale the context for zoom
+    ctx.save();
+    ctx.scale(scale, scale);
+
     // Draw grid
     drawGrid(ctx);
 
@@ -232,17 +245,17 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     ctx.lineWidth = 2;
     
     // X-axis (horizontal)
-    const xAxisY = gameToCanvas({ x: 0, y: 0 }).y;
+    const xAxisY = MAP_SIZE / 2;
     ctx.beginPath();
     ctx.moveTo(0, xAxisY);
-    ctx.lineTo(canvas.width, xAxisY);
+    ctx.lineTo(MAP_SIZE, xAxisY);
     ctx.stroke();
     
     // Y-axis (vertical)
-    const yAxisX = gameToCanvas({ x: 0, y: 0 }).x;
+    const yAxisX = MAP_SIZE / 2;
     ctx.beginPath();
     ctx.moveTo(yAxisX, 0);
-    ctx.lineTo(yAxisX, canvas.height);
+    ctx.lineTo(yAxisX, MAP_SIZE);
     ctx.stroke();
 
     // Draw origin marker
@@ -263,6 +276,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     // Draw current drawing
     drawCurrentDrawing(ctx);
+
+    ctx.restore();
   }, [state, regions, paths, points, drawGrid, drawRegion, drawPath, drawPoint, drawCurrentDrawing, gameToCanvas]);
 
   useEffect(() => {
