@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth';
 import {
   getPoints,
   getPoint,
   createPoint,
   updatePoint,
   deletePoint
-} from '../controllers/pointController.js';
+} from '../controllers/pointController';
 
 const router = Router();
 

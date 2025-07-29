@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { apiClient } from '../services/api';
 import { EditorState, DrawingTool, Coordinate, Region, Path, Point } from '../types';
@@ -25,7 +25,7 @@ export const useEditor = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Set API token when session changes
-  useState(() => {
+  useEffect(() => {
     if (session?.access_token) {
       apiClient.setToken(session.access_token);
     }
@@ -97,7 +97,7 @@ export const useEditor = () => {
   }, [session]);
 
   // Load data when session is available
-  useState(() => {
+  useEffect(() => {
     loadData();
   }, [loadData]);
 

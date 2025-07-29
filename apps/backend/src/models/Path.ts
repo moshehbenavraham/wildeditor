@@ -1,8 +1,13 @@
-import { supabase } from '../config/database.js';
+import { supabase } from '../config/database';
 import { Path, PathEntity } from '@wildeditor/shared/types';
 
 export class PathModel {
   static async findAll(): Promise<PathEntity[]> {
+    if (!supabase) {
+      console.warn('Supabase not configured - returning mock data');
+      return [];
+    }
+
     const { data, error } = await supabase
       .from('paths')
       .select('*')

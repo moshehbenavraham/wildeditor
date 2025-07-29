@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { RegionModel } from '../models/Region.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { RegionModel } from '../models/Region';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export const getRegions = async (req: Request, res: Response) => {
   try {

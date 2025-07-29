@@ -1,8 +1,13 @@
-import { supabase } from '../config/database.js';
+import { supabase } from '../config/database';
 import { Region, RegionEntity, Coordinate } from '@wildeditor/shared/types';
 
 export class RegionModel {
   static async findAll(): Promise<RegionEntity[]> {
+    if (!supabase) {
+      console.warn('Supabase not configured - returning mock data');
+      return [];
+    }
+
     const { data, error } = await supabase
       .from('regions')
       .select('*')
@@ -13,6 +18,11 @@ export class RegionModel {
   }
 
   static async findById(id: string): Promise<RegionEntity | null> {
+    if (!supabase) {
+      console.warn('Supabase not configured - returning null');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('regions')
       .select('*')
@@ -27,6 +37,10 @@ export class RegionModel {
   }
 
   static async create(region: Omit<Region, 'id'>): Promise<RegionEntity> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot create region');
+    }
+
     const { data, error } = await supabase
       .from('regions')
       .insert({
@@ -45,6 +59,10 @@ export class RegionModel {
   }
 
   static async update(id: string, updates: Partial<Region>): Promise<RegionEntity> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot update region');
+    }
+
     const { data, error } = await supabase
       .from('regions')
       .update(updates)
@@ -57,6 +75,10 @@ export class RegionModel {
   }
 
   static async delete(id: string): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot delete region');
+    }
+
     const { error } = await supabase
       .from('regions')
       .delete()

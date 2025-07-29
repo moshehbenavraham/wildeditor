@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth';
 import {
   getPaths,
   getPath,
   createPath,
   updatePath,
   deletePath
-} from '../controllers/pathController.js';
+} from '../controllers/pathController';
 
 const router = Router();
 

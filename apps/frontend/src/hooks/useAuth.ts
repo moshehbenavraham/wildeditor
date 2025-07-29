@@ -8,6 +8,11 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -28,6 +33,9 @@ export const useAuth = () => {
   }, [])
 
   const signUp = async (email: string, password: string) => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured') }
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -39,6 +47,9 @@ export const useAuth = () => {
   }
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured') }
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -47,11 +58,17 @@ export const useAuth = () => {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      return { error: new Error('Supabase not configured') }
+    }
     const { error } = await supabase.auth.signOut()
     return { error }
   }
 
   const resetPassword = async (email: string) => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured') }
+    }
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: 'https://wildedit.luminarimud.com/reset-password',
     })

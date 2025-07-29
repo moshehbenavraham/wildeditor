@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { PathModel } from '../models/Path.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { PathModel } from '../models/Path';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export const getPaths = async (req: Request, res: Response) => {
   try {

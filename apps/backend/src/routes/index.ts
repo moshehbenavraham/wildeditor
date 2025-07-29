@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import regionsRouter from './regions.js';
-import pathsRouter from './paths.js';
-import pointsRouter from './points.js';
+import regionsRouter from './regions';
+import pathsRouter from './paths';
+import pointsRouter from './points';
 
 const router = Router();
 

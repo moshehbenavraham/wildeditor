@@ -6,7 +6,13 @@
       "Bash(git commit:*)",
       "Bash(git config:*)",
       "Bash(find:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(npm:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": []
   }

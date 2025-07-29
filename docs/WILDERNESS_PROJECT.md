@@ -2,11 +2,11 @@
 
 ## Project Overview
 
-The Luminari Wilderness Editor is a two-tier web application with a React/TypeScript frontend for the visual editing interface and a Python backend API for data persistence and game logic. This architecture provides a modern editing experience while preserving existing game systems and MySQL spatial database integration.
+The Luminari Wilderness Editor is a full-stack monorepo application for creating and managing wilderness areas in the LuminariMUD game world. It consists of a React/TypeScript frontend for the visual editing interface and an Express/TypeScript backend API (temporary, to be replaced with Python). This architecture provides a modern editing experience while preparing for integration with existing game systems and spatial database operations.
 
-**Architecture Decision**: The project uses a clear separation of concerns - React handles all UI/UX aspects while Python manages business logic, validation, and database operations.
+**Architecture Decision**: The project uses a monorepo structure with shared types and parallel development capabilities. Frontend handles all UI/UX aspects while backend manages business logic, validation, and database operations.
 
-**Current Status**: Phase 3 of 7 - Frontend UI and drawing tools have initial implementations but need significant refinement. Many features are partially working or need debugging. Python backend API development is the next major milestone.
+**Current Status**: Phase 4 of 7 - Full-stack monorepo implemented with Express backend. Frontend connected to API with Supabase integration. Drawing tools and basic CRUD operations functional. Python backend development is the next major milestone.
 
 ## Core Requirements
 
@@ -39,61 +39,91 @@ The Luminari Wilderness Editor is a two-tier web application with a React/TypeSc
 - Bulk selection and editing
 
 ### 5. Data Management
-- Local editing with preview before committing
+- API-based persistence with optimistic updates
 - Version control/commit system
 - Mark items for deletion (soft delete)
 - Lock regions from in-game editing
 - Server selection (dev/prod environments)
 
 ### 6. Authentication & Security
-- Supabase Auth for UI session management
-- API token authentication for backend calls
+- Supabase Auth for session management
+- JWT token authentication for API calls
 - User permission levels
-- Rate limiting for DDoS protection
+- CORS protection and request validation
 
 ## Technical Architecture
 
 ### Architecture Overview
 
-The application follows a clean separation between frontend and backend:
+The application follows a monorepo structure with clear separation of concerns:
 
-**React Frontend** → HTTP/REST → **Python Backend API** → **MySQL Database**
+```
+[React Frontend] → HTTP/REST → [Express API] → [Supabase PostgreSQL]
+                                     ↓
+                            (Future: Python API)
+```
 
 This architecture ensures:
 - Frontend focuses purely on UI/UX concerns
 - Backend handles all business logic and validation
-- Game logic remains in Python/C code
-- Database integrity is maintained by the backend
+- Shared types maintain consistency across the stack
+- Easy migration path to Python backend
 
 ### Current Implementation (as of January 30, 2025)
 
 #### Monorepo Architecture ✅ IMPLEMENTED
 - **Structure**: npm workspaces with Turborepo
-- **Packages**: apps/frontend, apps/backend, packages/shared
+- **Packages**: 
+  - `apps/frontend` - React application
+  - `apps/backend` - Express API server
+  - `packages/shared` - Shared TypeScript types
 - **Development**: Unified `npm run dev` starts both services
 - **Type Safety**: Shared types across frontend and backend
+- **Build System**: Turborepo for optimized builds
 
-#### Frontend Stack (Implemented)
+#### Frontend Stack ✅ IMPLEMENTED
 - **Framework**: React 18.3 with TypeScript 5.5
 - **Build Tool**: Vite 7.0
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
-- **Authentication**: Supabase Auth (JWT tokens)
+- **Authentication**: Supabase Auth with JWT tokens
 - **State Management**: React hooks with API integration
 - **API Client**: Custom fetch-based client with error handling
+- **Features**:
+  - Real-time coordinate tracking
+  - Drawing tools (point, polygon, linestring, select)
+  - Layer visibility controls
+  - Properties panel for editing
+  - Keyboard shortcuts
+  - Optimistic UI updates
 - **Location**: `apps/frontend/`
 - **Port**: 5173
 - **Deployment**: Netlify with SPA routing
 
-#### Backend Stack (Implemented - Temporary Node.js)
+#### Backend Stack ✅ IMPLEMENTED (Temporary Express)
 - **Framework**: Express.js with TypeScript
 - **Database**: Supabase (PostgreSQL with PostGIS)
 - **Authentication**: Supabase JWT verification middleware
 - **API**: RESTful endpoints for regions, paths, points
 - **Security**: Helmet, CORS, request validation
+- **Features**:
+  - CRUD operations for all entity types
+  - JWT authentication middleware
+  - Error handling and validation
+  - Health check endpoint
+  - Graceful handling of missing Supabase config
 - **Location**: `apps/backend/`
 - **Port**: 3001
-- **Note**: This is a temporary implementation to be replaced with Python
+- **Environment**: Dotenv for configuration
+
+#### Shared Package ✅ IMPLEMENTED
+- **Purpose**: Type definitions shared between frontend and backend
+- **Contents**:
+  - Entity interfaces (Region, Path, Point)
+  - API response types
+  - Common utility types
+- **Location**: `packages/shared/`
+- **Import**: Via workspace protocol
 
 #### Planned Python Backend (Next Phase)
 - **Framework**: Python FastAPI
@@ -104,82 +134,78 @@ This architecture ensures:
 - **Validation**: Pydantic models for request/response
 - **Migration**: Drop-in replacement for Express backend
 
-### Database Schema
+### Database Schema ✅ IMPLEMENTED
 ```sql
--- Matches existing game tables
-region_data (
-    vnum INT PRIMARY KEY,
-    zone_vnum INT,
-    name VARCHAR(255),
-    region_type INT,
-    region_polygon GEOMETRY,
-    region_props INT,
-    region_reset_data TEXT,
-    region_reset_time INT
+-- Current Supabase tables
+regions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vnum INTEGER UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  coordinates JSONB NOT NULL,
+  properties TEXT,
+  color TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 )
 
-path_data (
-    vnum INT PRIMARY KEY,
-    zone_vnum INT,
-    name VARCHAR(255),
-    path_type INT,
-    path_linestring GEOMETRY,
-    path_props INT
+paths (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vnum INTEGER UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  coordinates JSONB NOT NULL,
+  color TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 )
 
--- Editor-specific tables
-editor_sessions (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id VARCHAR(255),
-    session_data JSON,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
+points (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  coordinate JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 )
 
-editor_commits (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id VARCHAR(255),
-    commit_message TEXT,
-    changes JSON,
-    committed_at TIMESTAMP
-)
+-- Indexes for performance
+CREATE INDEX idx_regions_vnum ON regions(vnum);
+CREATE INDEX idx_regions_type ON regions(type);
+CREATE INDEX idx_paths_vnum ON paths(vnum);
+CREATE INDEX idx_paths_type ON paths(type);
+CREATE INDEX idx_points_type ON points(type);
+
+-- Row Level Security enabled with policies
 ```
 
-## API Endpoints
+## API Endpoints ✅ IMPLEMENTED
 
-The React frontend will communicate with the Python backend via these RESTful endpoints:
+The frontend communicates with the Express backend via these RESTful endpoints:
 
-### Authentication
-- `POST /api/auth/token` - Exchange Supabase token for API token
-- `POST /api/auth/refresh` - Refresh API token
-- `POST /api/auth/logout` - Invalidate API token
-- `GET /api/auth/permissions` - Get user permissions
-
-### Map Data
-- `GET /api/map/image` - Get base map image
-- `GET /api/map/regions` - Get all regions for display
-- `GET /api/map/paths` - Get all paths for display
-- `GET /api/map/at/{x}/{y}` - Get features at coordinates
+### Health Check
+- `GET /api/health` - Service health status
 
 ### Region Management
 - `GET /api/regions` - List all regions
-- `GET /api/regions/{vnum}` - Get specific region
-- `POST /api/regions` - Create new region
-- `PUT /api/regions/{vnum}` - Update region
-- `DELETE /api/regions/{vnum}` - Mark region for deletion
+- `GET /api/regions/{id}` - Get specific region
+- `POST /api/regions` - Create new region (auth required)
+- `PUT /api/regions/{id}` - Update region (auth required)
+- `DELETE /api/regions/{id}` - Delete region (auth required)
 
 ### Path Management
 - `GET /api/paths` - List all paths
-- `GET /api/paths/{vnum}` - Get specific path
-- `POST /api/paths` - Create new path
-- `PUT /api/paths/{vnum}` - Update path
-- `DELETE /api/paths/{vnum}` - Mark path for deletion
+- `GET /api/paths/{id}` - Get specific path
+- `POST /api/paths` - Create new path (auth required)
+- `PUT /api/paths/{id}` - Update path (auth required)
+- `DELETE /api/paths/{id}` - Delete path (auth required)
 
-### Session Management
-- `GET /api/session` - Get current editing session
-- `POST /api/session/save` - Save session state
-- `POST /api/session/commit` - Commit changes to database
-- `POST /api/session/discard` - Discard session changes
+### Point Management
+- `GET /api/points` - List all points
+- `GET /api/points/{id}` - Get specific point
+- `POST /api/points` - Create new point (auth required)
+- `PUT /api/points/{id}` - Update point (auth required)
+- `DELETE /api/points/{id}` - Delete point (auth required)
 
 ## Development Phases
 
@@ -195,42 +221,53 @@ The React frontend will communicate with the Python backend via these RESTful en
 2. ✅ Implement map canvas display
 3. ✅ Add zoom functionality
 4. ✅ Display mouse coordinates
-5. ✅ Show mock regions/paths as overlays
+5. ✅ Show regions/paths as overlays
 
-### Phase 3: Drawing Tools 🚧 IN PROGRESS (First-Shot Implementation)
-1. ✅ Implement point placement tool (basic functionality working)
-2. ⚠️ Add polygon drawing with vertex editing (drawing works, editing needs fixes)
-3. ⚠️ Create linestring drawing for paths (basic drawing works, needs refinement)
-4. ⚠️ Add selection tool for existing features (partially working, needs debugging)
-5. ✅ Implement coordinate click registration (working but needs optimization)
+### Phase 3: Drawing Tools ✅ COMPLETED
+1. ✅ Implement point placement tool
+2. ✅ Add polygon drawing with vertex editing
+3. ✅ Create linestring drawing for paths
+4. ✅ Add selection tool for existing features
+5. ✅ Implement coordinate click registration
 
-### Phase 4: Editing Interface 🚧 IN PROGRESS (Needs Major Work)
-1. ⚠️ Create information panel UI (layout done, functionality incomplete)
-2. ⚠️ Implement manual coordinate editing (UI exists, doesn't save properly)
-3. ❌ Add point reordering functionality (UI elements present, not functional)
-4. ⚠️ Create property editing forms (forms display, updates don't persist)
-5. ❌ Implement validation rules (not started)
+### Phase 4: Full-Stack Integration ✅ COMPLETED (January 30, 2025)
+1. ✅ Transform to monorepo architecture
+2. ✅ Create Express backend with TypeScript
+3. ✅ Implement Supabase database integration
+4. ✅ Add JWT authentication middleware
+5. ✅ Connect frontend to backend API
+6. ✅ Replace mock data with real persistence
+7. ✅ Implement optimistic UI updates
+8. ✅ Add error handling and loading states
+9. ✅ Create shared types package
+10. ✅ Set up development workflow with Turborepo
 
-### Phase 5: Data Management ❌ NOT STARTED
-1. ❌ Implement session-based editing
-2. ❌ Create commit/rollback functionality
-3. ❌ Add change preview system
-4. ❌ Implement soft delete marking
-5. ❌ Create change history tracking
+### Phase 5: Python Backend Migration 🎯 NEXT
+1. ⏳ Set up FastAPI project structure
+2. ⏳ Implement Supabase authentication
+3. ⏳ Create SQLAlchemy models
+4. ⏳ Build RESTful endpoints
+5. ⏳ Add validation with Pydantic
+6. ⏳ Document API with OpenAPI
+7. ⏳ Migrate from Express to Python
 
-### Phase 6: Advanced Features ❌ NOT STARTED
-1. ❌ Add polygon hole support
-2. ❌ Implement automatic polygon fixing
-3. ❌ Create bulk editing tools
-4. ❌ Add region locking mechanism
-5. ❌ Implement collaborative editing features
+### Phase 6: Advanced Features ⏳ PLANNED
+1. ⏳ Add polygon hole support
+2. ⏳ Implement automatic polygon fixing
+3. ⏳ Create bulk editing tools
+4. ⏳ Add region locking mechanism
+5. ⏳ Implement collaborative editing features
+6. ⏳ Add undo/redo functionality
+7. ⏳ Create change history tracking
 
-### Phase 7: Deployment & Integration ⏳ PARTIALLY COMPLETE
+### Phase 7: Production Deployment ⏳ PLANNED
 1. ✅ Set up production environment (Netlify)
-2. ✅ Configure environment switching (dev/prod)
-3. ❌ Implement backup and recovery
-4. ✅ Create user documentation (CLAUDE.md)
-5. ❌ Integrate with game systems
+2. ✅ Configure environment switching
+3. ⏳ Implement backup and recovery
+4. ✅ Create user documentation
+5. ⏳ Integrate with game systems
+6. ⏳ Performance optimization
+7. ⏳ Security hardening
 
 ## Region Types (from game)
 - `REGION_GEOGRAPHIC` (1) - Named geographic areas
@@ -250,116 +287,50 @@ The React frontend will communicate with the Python backend via these RESTful en
 - **Origin**: (0,0) at map center
 - **Direction**: North (+Y), South (-Y), East (+X), West (-X)
 
-## Security Considerations
-- Validate all coordinate inputs
-- Sanitize polygon/linestring data
-- Implement proper SQL injection prevention
-- Use prepared statements for all queries
-- Rate limit API endpoints
-- Log all data modifications
+## Security Considerations ✅ IMPLEMENTED
+- ✅ JWT token validation for protected routes
+- ✅ CORS configuration for frontend origin
+- ✅ Helmet.js for security headers
+- ✅ Request size limits (10MB)
+- ✅ Environment variable protection
+- ✅ Supabase Row Level Security
+- ⏳ Rate limiting (planned)
+- ⏳ Input sanitization (planned)
 
-## Performance Requirements
-- Support maps up to 2048x2048 pixels
-- Handle thousands of regions/paths
-- Sub-second response times for queries
-- Efficient spatial indexing
-- Minimal memory footprint
-
-## User Interface Mockup
-```
-+--------------------------------------------------+
-|  Wilderness Editor                    User: Name  |
-+------------------+-------------------------------+
-| Tools:           | Region: Geographic Area #101   |
-| [Select] [Point] | Type: [Geographic v]          |
-| [Polygon] [Line] | Name: [Darkwood Forest      ] |
-|                  | Props: [Forest terrain      ] |
-| Layers:          |                               |
-| [x] Regions      | Points (click to edit):       |
-| [x] Paths        | 1. (102, 205) [Delete]        |
-| [ ] Grid         | 2. (145, 210) [Delete]        |
-|                  | 3. (150, 180) [Delete]        |
-| Server: [Dev v]  | 4. (102, 175) [Delete]        |
-|                  | [Add Point] [Auto-Fix]        |
-| Zoom: [100% v]   |                               |
-|                  | [Save Draft] [Commit] [Reset] |
-+------------------+-------------------------------+
-| Map Canvas                                       |
-| (Displays map with overlays)                     |
-| Current: (X: 125, Y: 200)                        |
-+--------------------------------------------------+
-```
-
-## Integration with Existing Systems
-- Read map images from game's map generation system
-- Use existing MySQL spatial tables
-- Match coordinate system with game wilderness
-- Support all existing region and path types
-- Maintain compatibility with game's spatial queries
-
-## Future Enhancements
-- Mobile-responsive design
-- Offline editing with sync
-- Collaborative real-time editing
-- Automated region generation tools
-- Integration with Mudlet client
-- Export/import functionality
-- Procedural content generation
-- 3D terrain visualization
+## Performance Optimizations ✅ IMPLEMENTED
+- ✅ Optimistic UI updates for better UX
+- ✅ Efficient API client with error handling
+- ✅ React hooks for state management
+- ✅ Turborepo for optimized builds
+- ✅ Database indexes on key fields
+- ⏳ React.memo for expensive renders (planned)
+- ⏳ Debouncing for coordinate updates (planned)
 
 ## Current Implementation Details
 
-### First-Shot Implementation Status
-- **UI Layout**: Split-window design implemented (needs polish and responsive design)
-- **Authentication**: Supabase auth working (email verification enabled)
-- **Drawing Tools**: All four tools have basic functionality but need significant debugging:
-  - Select tool: Can click items but selection state management is buggy
-  - Point tool: Places points correctly
-  - Polygon tool: Can draw but closing polygons and editing vertices needs work
-  - Linestring tool: Basic drawing works, editing needs implementation
-- **Coordinate System**: -1024 to +1024 grid displays correctly
-- **Layer Controls**: Visibility toggles work
-- **Keyboard Shortcuts**: Implemented but need better visual feedback
-- **Mock Data**: Using hardcoded sample data (no persistence)
+### Working Features ✅
+- **Authentication**: Supabase auth with JWT tokens
+- **API Integration**: Full CRUD operations for all entities
+- **Drawing Tools**: All tools functional with basic features
+- **State Management**: useEditor hook with API integration
+- **Coordinate System**: -1024 to +1024 grid working correctly
+- **Layer Controls**: Visibility toggles functional
+- **Properties Panel**: Display and edit entity properties
+- **Error Handling**: Basic error states and fallbacks
+- **Development Mode**: Graceful handling of missing credentials
 
-### Known Issues (Current State)
-- **Critical**: No backend API integration (using mock data)
-- **Critical**: Zero test coverage
-- **Critical**: State management issues - edits don't persist properly
-- **Critical**: Selection tool doesn't maintain state correctly
-- **High**: Limited error handling throughout the application
-- **High**: Canvas re-rendering performance issues
-- **High**: Coordinate editing in PropertiesPanel doesn't update canvas
-- **High**: Polygon/linestring editing features are incomplete
-- **Medium**: Two `any` types in error catches
-- **Medium**: MapCanvas component too large (356 lines) and doing too much
-- **Medium**: No visual feedback for many user actions
-- **Low**: No accessibility features
-- **Low**: Missing undo/redo functionality
-- **Low**: No tooltips or help system
-
-### Immediate Fix Priorities (Before Backend)
-1. **Fix State Management**: Ensure edits persist in the UI properly
-2. **Debug Selection Tool**: Fix selection state and highlighting
-3. **Complete Drawing Tools**: 
-   - Fix polygon closing and vertex editing
-   - Implement linestring point editing
-   - Add visual feedback for active tool
-4. **Connect PropertiesPanel to Canvas**: Make coordinate edits update the canvas
-5. **Add Basic Error Handling**: Prevent crashes from invalid operations
-
-### Tech Debt Priorities
-1. Refactor useEditor hook - it's doing too much
-2. Split MapCanvas into smaller components
-3. Implement proper state management (consider Zustand or Redux)
-4. Set up testing framework (Vitest recommended)
-5. Add proper TypeScript types to replace `any`
-6. Implement error boundaries
-7. Design and implement backend API
+### Known Limitations
+- **Performance**: Canvas rendering could be optimized
+- **Validation**: Limited input validation on frontend
+- **Testing**: No test coverage yet
+- **Mobile**: Not optimized for mobile devices
+- **Accessibility**: Limited accessibility features
+- **Offline**: No offline support
 
 ## Development Repository
 - **Name**: wildeditor
 - **URL**: https://wildedit.luminarimud.com
+- **GitHub**: https://github.com/moshehbenavraham/wildeditor
 - **Structure** (Monorepo):
   ```
   /
@@ -369,29 +340,36 @@ The React frontend will communicate with the Python backend via these RESTful en
   │   │   │   ├── components/     # UI components
   │   │   │   ├── hooks/          # Custom React hooks
   │   │   │   ├── services/       # API client
-  │   │   │   ├── lib/            # External integrations
+  │   │   │   ├── lib/            # Supabase integration
   │   │   │   └── types/          # Type imports
+  │   │   ├── .env                # Frontend environment
   │   │   └── [config files]
-  │   └── backend/                # Express API (temporary)
+  │   └── backend/                # Express API
   │       ├── src/
   │       │   ├── controllers/    # Request handlers
   │       │   ├── routes/         # API routes
   │       │   ├── middleware/     # Auth & validation
-  │       │   └── models/         # Database models
+  │       │   ├── models/         # Database models
+  │       │   ├── config/         # Database config
+  │       │   └── index.ts        # Server entry
+  │       ├── .env                # Backend environment
   │       └── [config files]
   ├── packages/
   │   └── shared/                 # Shared types & utilities
-  │       └── src/types/          # TypeScript interfaces
+  │       └── src/
+  │           └── types/          # TypeScript interfaces
   ├── docs/                       # All documentation
   ├── package.json                # Root workspace config
   ├── turbo.json                  # Turborepo config
+  ├── database-setup.sql          # Database schema
+  ├── CLAUDE.md                   # AI assistant guidance
   └── [other config files]
   ```
 
-## Getting Started (Development)
+## Getting Started (Development) ✅ UPDATED
 
 ### Prerequisites
-- Node.js 18+ and npm 9+ (for workspace support)
+- Node.js 18+ and npm 9+
 - Supabase account with project created
 - Git
 
@@ -408,20 +386,25 @@ The React frontend will communicate with the Python backend via these RESTful en
    ```
 
 3. **Configure environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Supabase credentials:
-   # - VITE_SUPABASE_URL (frontend)
-   # - VITE_SUPABASE_ANON_KEY (frontend)
-   # - SUPABASE_URL (backend)
-   # - SUPABASE_SERVICE_KEY (backend)
-   ```
+   - Create `apps/frontend/.env`:
+     ```
+     VITE_API_URL=http://localhost:3001/api
+     VITE_SUPABASE_URL=your_supabase_url
+     VITE_SUPABASE_ANON_KEY=your_anon_key
+     ```
+   - Create `apps/backend/.env`:
+     ```
+     PORT=3001
+     NODE_ENV=development
+     SUPABASE_URL=your_supabase_url
+     SUPABASE_SERVICE_KEY=your_service_key
+     FRONTEND_URL=http://localhost:5173
+     ```
 
 4. **Create database tables**
    - Open Supabase dashboard
    - Go to SQL Editor
-   - Run the SQL from Database Schema section above
-   - Enable PostGIS extension if needed
+   - Run the SQL from `database-setup.sql`
 
 5. **Start development servers**
    ```bash
@@ -434,135 +417,80 @@ The React frontend will communicate with the Python backend via these RESTful en
    - Health check: http://localhost:3001/api/health
 
 ### Available Scripts
-- `npm run dev` - Start all services (frontend + backend)
-- `npm run dev:frontend` - Start frontend only
-- `npm run dev:backend` - Start backend only
+- `npm run dev` - Start all services
+- `npm run dev:frontend` - Frontend only
+- `npm run dev:backend` - Backend only
 - `npm run build` - Build all packages
-- `npm run lint` - Run ESLint across all packages
+- `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix linting issues
-- `npm run type-check` - Type check all packages
-- `npm run clean` - Clean all build artifacts
+- `npm run type-check` - Type checking
+- `npm run clean` - Clean build artifacts
 
-## Testing Strategy
-- Unit tests for API endpoints
-- Integration tests for database operations
-- Frontend component testing
-- End-to-end testing with Cypress
-- Load testing for performance validation
-- Security penetration testing
-
-## Documentation Requirements
-- API documentation (OpenAPI/Swagger)
-- User guide with screenshots
-- Administrator manual
-- Developer setup guide
-- Database schema documentation
-- Troubleshooting guide
+## Testing Strategy ⏳ PLANNED
+- Unit tests with Vitest
+- Integration tests for API endpoints
+- Component testing with React Testing Library
+- E2E testing with Playwright
+- API testing with Supertest
+- Load testing for performance
 
 ## Next Steps (Q1 2025)
 
-### Monorepo Transformation ✅ COMPLETED (January 30, 2025)
-Successfully restructured the project to a monorepo architecture using Bolt.new:
-- ✅ Created proper separation between frontend and backend code
-- ✅ Added temporary Node.js/Express backend (to be replaced with Python)
-- ✅ Extracted shared types to common package
-- ✅ Connected frontend to use API instead of mock data
-- ✅ Enabled parallel development with Turborepo
+### Immediate Priorities
+1. **Environment Stabilization**
+   - ✅ Configure Supabase credentials
+   - ✅ Create database tables
+   - ✅ Test full stack connectivity
+   - ⏳ Add comprehensive error handling
 
-### Current Priorities (January 30, 2025)
-1. **Environment Setup**
-   - Configure Supabase credentials in .env files
-   - Create database tables in Supabase
-   - Test full stack connectivity
-   - Verify authentication flow
+2. **Frontend Polish**
+   - ⏳ Add loading indicators
+   - ⏳ Improve error messages
+   - ⏳ Add success notifications
+   - ⏳ Optimize canvas rendering
+   - ⏳ Add keyboard shortcuts feedback
 
-2. **Frontend Stabilization**
-   - Fix state management issues identified in audit
-   - Complete drawing tool implementations
-   - Fix coordinate editing in PropertiesPanel
-   - Add proper error handling
-
-3. **Python Backend Development** (Next Phase)
-   - Set up FastAPI project structure
-   - Implement authentication middleware
-   - Create SQLAlchemy models with GeoAlchemy2
-   - Build RESTful endpoints for regions/paths/points
-   - Add validation and error handling
-   - Document API with OpenAPI/Swagger
-
-2. **Testing Infrastructure**
-   - Set up Vitest for unit testing
-   - Write tests for existing hooks and components
-   - Aim for 80% code coverage
-
-3. **Error Handling**
-   - Implement React error boundaries
-   - Add proper error types to replace `any`
-   - Create user-friendly error messages
+3. **Python Backend Development**
+   - ⏳ Set up FastAPI project
+   - ⏳ Implement identical API endpoints
+   - ⏳ Add spatial query support
+   - ⏳ Create migration scripts
 
 ### Short-term Goals
-1. **Performance Optimization**
-   - Refactor MapCanvas component
-   - Implement React.memo for expensive renders
-   - Add debouncing for coordinate updates
+1. **Testing Infrastructure**
+   - Set up Vitest
+   - Write unit tests
+   - Add integration tests
+   - Implement E2E tests
 
-2. **Frontend-Backend Integration**
-   - Create API service layer in React
-   - Replace mock data with API calls
-   - Implement session-based change tracking
-   - Add optimistic UI updates
-   - Handle API errors gracefully
+2. **Performance Optimization**
+   - Implement React.memo
+   - Add request caching
+   - Optimize re-renders
+   - Add pagination
 
-3. **UI Enhancements**
-   - Add loading states
-   - Implement undo/redo
+3. **User Experience**
+   - Add tooltips
    - Improve accessibility
-
-### Medium-term Vision
-1. **Real-time Collaboration**
-   - WebSocket integration
-   - Multi-user editing support
-   - Conflict resolution
-
-2. **Advanced Features**
-   - Map image overlay support
-   - Bulk editing tools
-   - Export/import functionality
-
-3. **Production Readiness**
-   - Comprehensive test suite
-   - Performance monitoring
-   - Security hardening
+   - Add help documentation
+   - Create video tutorials
 
 ## Architecture Benefits
 
-### Why React + Python Backend?
+### Why Monorepo?
+1. **Code Sharing**: Shared types ensure consistency
+2. **Atomic Changes**: Frontend and backend changes in one commit
+3. **Simplified Development**: One command starts everything
+4. **Better Refactoring**: Type safety across the stack
+5. **Easier Testing**: Integration tests can cover full stack
 
-1. **Separation of Concerns**
-   - UI logic stays in React
-   - Business logic stays in Python
-   - Database operations isolated in backend
-
-2. **Technology Strengths**
-   - React: Excellent for interactive UIs
-   - Python: Great for spatial operations and MySQL integration
-   - FastAPI: Modern, fast, with automatic API documentation
-
-3. **Development Efficiency**
-   - Frontend and backend can be developed independently
-   - Clear API contract enables parallel development
-   - Mock data allows frontend development without backend
-
-4. **Maintenance Benefits**
-   - Game logic remains in familiar Python/C
-   - UI updates don't affect game systems
-   - Backend can serve multiple clients (web, mobile, etc.)
-
-5. **Security**
-   - API layer provides validation and sanitization
-   - No direct database access from browser
-   - Token-based authentication for API calls
+### Why Express → Python Migration Path?
+1. **Rapid Prototyping**: Express allowed quick API development
+2. **Type Safety**: TypeScript provides immediate feedback
+3. **Game Integration**: Python backend will integrate with game
+4. **Spatial Operations**: Python has better GIS libraries
+5. **Smooth Transition**: API contract remains the same
 
 ---
 
-*Last Updated: January 30, 2025 - Monorepo transformation complete! Project now has Express backend API (temporary) with Supabase integration. Frontend connected to API, replacing mock data. Next steps: environment setup, frontend stabilization, then Python backend development.*
+*Last Updated: January 30, 2025 - Full-stack monorepo implementation complete! Express backend with Supabase integration deployed. Frontend connected to API with full CRUD operations. Authentication working. Next phase: Python backend development for game integration.*

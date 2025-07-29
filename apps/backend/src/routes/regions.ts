@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth';
 import {
   getRegions,
   getRegion,
   createRegion,
   updateRegion,
   deleteRegion
-} from '../controllers/regionController.js';
+} from '../controllers/regionController';
 
 const router = Router();
 

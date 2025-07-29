@@ -1,8 +1,13 @@
-import { supabase } from '../config/database.js';
+import { supabase } from '../config/database';
 import { Point, PointEntity } from '@wildeditor/shared/types';
 
 export class PointModel {
   static async findAll(): Promise<PointEntity[]> {
+    if (!supabase) {
+      console.warn('Supabase not configured - returning mock data');
+      return [];
+    }
+
     const { data, error } = await supabase
       .from('points')
       .select('*')

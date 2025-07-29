@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { PointModel } from '../models/Point.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { PointModel } from '../models/Point';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export const getPoints = async (req: Request, res: Response) => {
   try {
