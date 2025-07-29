@@ -4,7 +4,9 @@
       "Bash(mv:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(find:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

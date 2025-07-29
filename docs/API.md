@@ -1,533 +1,379 @@
 # API Documentation
 
-This document describes the API endpoints and data structures used by the Luminari Wilderness Editor.
+This document describes the API endpoints and data structures used by the Luminari Wilderness Editor backend.
+
+## Current Implementation
+
+The backend is currently implemented using Express.js with TypeScript as a temporary solution. A Python FastAPI implementation is planned for the future.
 
 ## Base URL
 
 ```
-Development: http://localhost:3000/api
-Production: https://wildeditor.luminari.com/api
+Development: http://localhost:3001/api
+Production: https://api.wildedit.luminarimud.com
 ```
 
 ## Authentication
 
-The API uses token-based authentication. Include the token in the Authorization header:
+The API uses Supabase JWT authentication. Include the access token in the Authorization header:
 
 ```http
-Authorization: Bearer <your-token>
+Authorization: Bearer <your-supabase-access-token>
 ```
+
+The authentication middleware validates tokens with Supabase before allowing access to protected endpoints.
 
 ## Data Types
 
-### Coordinates
+### Shared Types (from @wildeditor/shared)
 
 ```typescript
-interface WildernessCoordinates {
+interface Coordinate {
   x: number; // Range: -1024 to 1024
   y: number; // Range: -1024 to 1024
 }
-```
 
-### Region
+interface Point {
+  id: string;
+  coordinate: Coordinate;
+  name: string;
+  type: 'landmark' | 'poi';
+}
 
-```typescript
 interface Region {
+  id: string;
   vnum: number;
-  zone_vnum: number;
   name: string;
-  region_type: RegionType;
-  region_props: number;
-  coordinates: WildernessCoordinates[];
-  created_at: string;
-  updated_at: string;
+  type: 'geographic' | 'encounter' | 'sector_transform' | 'sector';
+  coordinates: Coordinate[];
+  properties: string;
+  color: string;
 }
 
-enum RegionType {
-  GEOGRAPHIC = 1,      // Named geographic areas
-  ENCOUNTER = 2,       // Encounter spawn zones
-  SECTOR_TRANSFORM = 3, // Terrain modification
-  SECTOR = 4           // Complete terrain override
+interface Path {
+  id: string;
+  vnum: number;
+  name: string;
+  type: 'road' | 'dirt_road' | 'geographic' | 'river' | 'stream';
+  coordinates: Coordinate[];
+  color: string;
 }
 ```
 
-### Path
+### API Response Types
 
 ```typescript
-interface Path {
-  vnum: number;
-  zone_vnum: number;
-  name: string;
-  path_type: PathType;
-  path_props: number;
-  coordinates: WildernessCoordinates[];
-  created_at: string;
-  updated_at: string;
-}
-
-enum PathType {
-  ROAD = 1,           // Paved roads
-  DIRT_ROAD = 2,      // Dirt roads
-  GEOGRAPHIC = 3,     // Geographic features
-  RIVER = 5,          // Rivers and streams
-  STREAM = 6          // Small streams
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  error?: string;
 }
 ```
 
 ## Endpoints
 
-### Authentication
+### Health Check
 
-#### POST /auth/login
-Initiate authentication flow.
-
-**Request:**
-```json
-{
-  "provider": "google"
-}
-```
+#### GET /health
+Check API server status (no authentication required).
 
 **Response:**
 ```json
 {
-  "auth_url": "https://accounts.google.com/oauth/authorize?..."
+  "status": "healthy",
+  "timestamp": "2025-01-30T12:00:00.000Z",
+  "service": "wildeditor-backend"
 }
 ```
 
-#### GET /auth/callback
-OAuth callback endpoint.
-
-**Query Parameters:**
-- `code` - Authorization code from OAuth provider
-- `state` - State parameter for security
-
-**Response:**
-```json
-{
-  "token": "jwt-token-here",
-  "user": {
-    "id": "user-id",
-    "email": "user@example.com",
-    "name": "User Name"
-  }
-}
-```
-
-#### POST /auth/logout
-Logout current user.
-
-**Response:**
-```json
-{
-  "message": "Logged out successfully"
-}
-```
-
-### Map Data
-
-#### GET /map/image
-Get the base wilderness map image.
-
-**Query Parameters:**
-- `zoom` (optional) - Zoom level (default: 1)
-- `format` (optional) - Image format: png, jpg (default: png)
-
-**Response:**
-Binary image data with appropriate Content-Type header.
-
-#### GET /map/regions
-Get all regions for map display.
-
-**Query Parameters:**
-- `zone` (optional) - Filter by zone number
-- `type` (optional) - Filter by region type
-
-**Response:**
-```json
-{
-  "regions": [
-    {
-      "vnum": 100001,
-      "zone_vnum": 10000,
-      "name": "Darkwood Forest",
-      "region_type": 1,
-      "region_props": 0,
-      "coordinates": [
-        {"x": 100, "y": 200},
-        {"x": 150, "y": 200},
-        {"x": 150, "y": 150},
-        {"x": 100, "y": 150}
-      ]
-    }
-  ]
-}
-```
-
-#### GET /map/paths
-Get all paths for map display.
-
-**Query Parameters:**
-- `zone` (optional) - Filter by zone number
-- `type` (optional) - Filter by path type
-
-**Response:**
-```json
-{
-  "paths": [
-    {
-      "vnum": 200001,
-      "zone_vnum": 10000,
-      "name": "King's Road",
-      "path_type": 1,
-      "path_props": 0,
-      "coordinates": [
-        {"x": 0, "y": 0},
-        {"x": 50, "y": 25},
-        {"x": 100, "y": 50}
-      ]
-    }
-  ]
-}
-```
-
-#### GET /map/at/{x}/{y}
-Get all features at specific coordinates.
-
-**Path Parameters:**
-- `x` - X coordinate
-- `y` - Y coordinate
-
-**Response:**
-```json
-{
-  "coordinates": {"x": 100, "y": 200},
-  "regions": [
-    {
-      "vnum": 100001,
-      "name": "Darkwood Forest",
-      "region_type": 1
-    }
-  ],
-  "paths": [
-    {
-      "vnum": 200001,
-      "name": "Forest Path",
-      "path_type": 2
-    }
-  ]
-}
-```
-
-### Region Management
+### Regions
 
 #### GET /regions
-List all regions.
-
-**Query Parameters:**
-- `page` (optional) - Page number (default: 1)
-- `limit` (optional) - Items per page (default: 50)
-- `zone` (optional) - Filter by zone
-- `type` (optional) - Filter by region type
+Get all regions (authentication required).
 
 **Response:**
 ```json
 {
-  "regions": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 50,
-    "total": 150,
-    "pages": 3
-  }
+  "data": [
+    {
+      "id": "uuid",
+      "vnum": 101,
+      "name": "Darkwood Forest",
+      "type": "geographic",
+      "coordinates": [
+        {"x": 102, "y": 205},
+        {"x": 145, "y": 210},
+        {"x": 150, "y": 180},
+        {"x": 102, "y": 175}
+      ],
+      "properties": "Forest terrain",
+      "color": "#22C55E"
+    }
+  ]
 }
 ```
 
-#### GET /regions/{vnum}
-Get specific region by vnum.
-
-**Path Parameters:**
-- `vnum` - Region virtual number
+#### GET /regions/:id
+Get specific region by ID (authentication required).
 
 **Response:**
 ```json
 {
-  "vnum": 100001,
-  "zone_vnum": 10000,
-  "name": "Darkwood Forest",
-  "region_type": 1,
-  "region_props": 0,
-  "coordinates": [...],
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
+  "data": {
+    "id": "uuid",
+    "vnum": 101,
+    "name": "Darkwood Forest",
+    "type": "geographic",
+    "coordinates": [...],
+    "properties": "Forest terrain",
+    "color": "#22C55E"
+  }
 }
 ```
 
 #### POST /regions
-Create new region.
+Create new region (authentication required).
 
-**Request:**
+**Request Body:**
 ```json
 {
-  "zone_vnum": 10000,
-  "name": "New Forest",
-  "region_type": 1,
-  "region_props": 0,
+  "vnum": 103,
+  "name": "New Region",
+  "type": "geographic",
   "coordinates": [
-    {"x": 100, "y": 200},
-    {"x": 150, "y": 200},
-    {"x": 150, "y": 150},
-    {"x": 100, "y": 150}
-  ]
+    {"x": 0, "y": 0},
+    {"x": 50, "y": 0},
+    {"x": 50, "y": 50},
+    {"x": 0, "y": 50}
+  ],
+  "properties": "Description",
+  "color": "#FF0000"
 }
 ```
 
-**Response:**
+#### PUT /regions/:id
+Update existing region (authentication required).
+
+**Request Body:** (partial updates supported)
 ```json
 {
-  "vnum": 100002,
-  "message": "Region created successfully"
-}
-```
-
-#### PUT /regions/{vnum}
-Update existing region.
-
-**Path Parameters:**
-- `vnum` - Region virtual number
-
-**Request:**
-```json
-{
-  "name": "Updated Forest Name",
+  "name": "Updated Name",
   "coordinates": [...]
 }
 ```
 
-**Response:**
-```json
-{
-  "message": "Region updated successfully"
-}
-```
+#### DELETE /regions/:id
+Delete region (authentication required).
 
-#### DELETE /regions/{vnum}
-Mark region for deletion.
-
-**Path Parameters:**
-- `vnum` - Region virtual number
-
-**Response:**
-```json
-{
-  "message": "Region marked for deletion"
-}
-```
-
-### Path Management
+### Paths
 
 #### GET /paths
-List all paths.
-
-**Query Parameters:**
-- `page` (optional) - Page number (default: 1)
-- `limit` (optional) - Items per page (default: 50)
-- `zone` (optional) - Filter by zone
-- `type` (optional) - Filter by path type
+Get all paths (authentication required).
 
 **Response:**
 ```json
 {
-  "paths": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 50,
-    "total": 75,
-    "pages": 2
-  }
+  "data": [
+    {
+      "id": "uuid",
+      "vnum": 201,
+      "name": "Old Trade Road",
+      "type": "road",
+      "coordinates": [
+        {"x": -100, "y": -100},
+        {"x": -50, "y": -50},
+        {"x": 0, "y": 0}
+      ],
+      "color": "#8B5CF6"
+    }
+  ]
 }
 ```
 
-#### GET /paths/{vnum}
-Get specific path by vnum.
+#### GET /paths/:id
+Get specific path by ID (authentication required).
 
 #### POST /paths
-Create new path.
+Create new path (authentication required).
 
-#### PUT /paths/{vnum}
-Update existing path.
+**Request Body:**
+```json
+{
+  "vnum": 203,
+  "name": "New Path",
+  "type": "dirt_road",
+  "coordinates": [
+    {"x": 0, "y": 0},
+    {"x": 50, "y": 50}
+  ],
+  "color": "#8B5CF6"
+}
+```
 
-#### DELETE /paths/{vnum}
-Mark path for deletion.
+#### PUT /paths/:id
+Update existing path (authentication required).
 
-### Session Management
+#### DELETE /paths/:id
+Delete path (authentication required).
 
-#### GET /session
-Get current editing session.
+### Points
+
+#### GET /points
+Get all points/landmarks (authentication required).
 
 **Response:**
 ```json
 {
-  "session_id": "session-uuid",
-  "changes": {
-    "regions": {
-      "created": [...],
-      "updated": [...],
-      "deleted": [...]
-    },
-    "paths": {
-      "created": [...],
-      "updated": [...],
-      "deleted": [...]
+  "data": [
+    {
+      "id": "uuid",
+      "coordinate": {"x": 75, "y": 85},
+      "name": "Ancient Obelisk",
+      "type": "landmark"
     }
-  },
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
+  ]
 }
 ```
 
-#### POST /session/save
-Save current session state.
+#### GET /points/:id
+Get specific point by ID (authentication required).
 
-**Request:**
+#### POST /points
+Create new point (authentication required).
+
+**Request Body:**
 ```json
 {
-  "changes": {
-    "regions": {...},
-    "paths": {...}
-  }
+  "coordinate": {"x": 100, "y": 100},
+  "name": "New Landmark",
+  "type": "poi"
 }
 ```
 
-#### POST /session/commit
-Commit session changes to database.
+#### PUT /points/:id
+Update existing point (authentication required).
 
-**Request:**
-```json
-{
-  "commit_message": "Added new forest regions and connecting paths"
-}
-```
-
-**Response:**
-```json
-{
-  "commit_id": "commit-uuid",
-  "message": "Changes committed successfully"
-}
-```
-
-#### POST /session/discard
-Discard all session changes.
-
-**Response:**
-```json
-{
-  "message": "Session changes discarded"
-}
-```
+#### DELETE /points/:id
+Delete point (authentication required).
 
 ## Error Responses
 
-All endpoints may return these error responses:
+All API endpoints return consistent error responses:
 
 ### 400 Bad Request
 ```json
 {
-  "error": "Bad Request",
-  "message": "Invalid coordinates provided",
-  "details": {
-    "field": "coordinates",
-    "issue": "X coordinate out of range (-1024 to 1024)"
-  }
+  "error": "Invalid request data"
 }
 ```
 
 ### 401 Unauthorized
 ```json
 {
-  "error": "Unauthorized",
-  "message": "Authentication required"
+  "error": "Access token required"
 }
 ```
 
 ### 403 Forbidden
 ```json
 {
-  "error": "Forbidden",
-  "message": "Insufficient permissions"
+  "error": "Invalid or expired token"
 }
 ```
 
 ### 404 Not Found
 ```json
 {
-  "error": "Not Found",
-  "message": "Region with vnum 999999 not found"
+  "error": "Resource not found"
 }
 ```
 
 ### 500 Internal Server Error
 ```json
 {
-  "error": "Internal Server Error",
-  "message": "An unexpected error occurred"
+  "error": "Internal server error"
 }
 ```
 
-## Rate Limiting
+## CORS Configuration
 
-API endpoints are rate limited:
-- **Authentication endpoints**: 10 requests per minute
-- **Read endpoints**: 100 requests per minute
-- **Write endpoints**: 30 requests per minute
+The API allows cross-origin requests from configured frontend URLs:
+- Development: `http://localhost:5173`
+- Production: `https://wildedit.luminarimud.com`
 
-Rate limit headers are included in responses:
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1640995200
+## Implementation Notes
+
+### Current Backend (Express/TypeScript)
+- Located in `apps/backend/`
+- Uses Supabase for database operations
+- JWT validation via Supabase auth middleware
+- All endpoints return `ApiResponse<T>` wrapper
+
+### Future Backend (Python FastAPI)
+- Will maintain identical API structure
+- Same endpoints and response formats
+- Drop-in replacement for Express backend
+- Enhanced spatial operations with GeoAlchemy2
+
+## Database Schema
+
+The backend uses Supabase PostgreSQL with the following tables:
+
+```sql
+-- Enable PostGIS for spatial operations
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- Regions table
+CREATE TABLE regions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vnum INTEGER UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  coordinates JSONB NOT NULL,
+  properties TEXT,
+  color TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Paths table  
+CREATE TABLE paths (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vnum INTEGER UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  coordinates JSONB NOT NULL,
+  color TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Points table
+CREATE TABLE points (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  coordinate JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
-## Webhooks
+## Testing the API
 
-The API supports webhooks for real-time updates:
+### Using cURL
 
-### POST /webhooks/register
-Register a webhook endpoint.
-
-**Request:**
-```json
-{
-  "url": "https://your-app.com/webhook",
-  "events": ["region.created", "region.updated", "path.created"]
-}
+Health check:
+```bash
+curl http://localhost:3001/api/health
 ```
 
-### Webhook Events
+Get regions (with auth):
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:3001/api/regions
+```
 
-- `region.created` - New region created
-- `region.updated` - Region modified
-- `region.deleted` - Region deleted
-- `path.created` - New path created
-- `path.updated` - Path modified
-- `path.deleted` - Path deleted
+### Using the Frontend
 
-## Integration with LuminariMUD
-
-The API integrates directly with the LuminariMUD database:
-
-### Database Tables
-- `region_data` - Region definitions
-- `region_index` - Spatial index for regions
-- `path_data` - Path definitions
-- `path_index` - Spatial index for paths
-
-### Coordinate System
-- Uses the same coordinate system as the game (-1024 to 1024)
-- Coordinates are stored as MySQL GEOMETRY types
-- Spatial queries use MySQL's spatial functions
-
-### Real-time Updates
-- Changes are immediately available in the game
-- No server restart required
-- Automatic cache invalidation
+The frontend automatically includes the auth token in all API requests via the `apiClient` service in `apps/frontend/src/services/api.ts`.

@@ -1,11 +1,12 @@
 # Luminari Wilderness Editor
 
-A modern web-based visual editor for creating and managing wilderness regions, paths, and landmarks in the LuminariMUD game world. Built with React, TypeScript, and integrated with MySQL spatial databases.
+A modern full-stack monorepo application for creating and managing wilderness regions, paths, and landmarks in the LuminariMUD game world. Built with React/TypeScript frontend, Express/TypeScript backend, and integrated with Supabase PostgreSQL spatial databases.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-blue.svg)
 ![React](https://img.shields.io/badge/React-18.3+-blue.svg)
-![Vite](https://img.shields.io/badge/Vite-5.4+-purple.svg)
+![Express](https://img.shields.io/badge/Express-4.18+-green.svg)
+![Turborepo](https://img.shields.io/badge/Turborepo-2.0+-red.svg)
 
 ## 🌟 Features
 
@@ -32,9 +33,10 @@ A modern web-based visual editor for creating and managing wilderness regions, p
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 18+ and npm 9+ (for workspace support)
 - Supabase project with database access
 - Modern web browser with JavaScript enabled
+- Git
 
 ### Installation
 
@@ -52,7 +54,15 @@ A modern web-based visual editor for creating and managing wilderness regions, p
 3. **Configure environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your Supabase and API settings
+   # Edit .env with your credentials:
+   # Frontend (apps/frontend/.env):
+   #   VITE_SUPABASE_URL=your_supabase_url
+   #   VITE_SUPABASE_ANON_KEY=your_anon_key
+   #   VITE_API_URL=http://localhost:3001/api
+   # Backend (apps/backend/.env):
+   #   SUPABASE_URL=your_supabase_url
+   #   SUPABASE_SERVICE_KEY=your_service_key
+   #   PORT=3001
    ```
 
 4. **Set up database tables**
@@ -116,46 +126,59 @@ This editor integrates seamlessly with the LuminariMUD wilderness system:
 
 ## 🛠️ Technology Stack
 
-### Frontend
+### Frontend (`apps/frontend/`)
 - **React 18.3+** - Modern UI framework
 - **TypeScript 5.5+** - Type-safe development
-- **Vite** - Fast build tool and dev server
+- **Vite 7.0** - Fast build tool and dev server
 - **Tailwind CSS** - Utility-first styling
 - **Lucide React** - Beautiful icons
+- **Supabase Auth** - User authentication
 
-### Backend Integration
-- **MySQL** - Spatial database with geometry support
-- **Supabase** - Authentication and real-time features
-- **RESTful API** - Standard HTTP API design
+### Backend (`apps/backend/`)
+- **Express.js** - Node.js web framework (temporary, will be Python)
+- **TypeScript** - Type-safe backend development
+- **Supabase** - PostgreSQL with PostGIS for spatial data
+- **JWT Authentication** - Secure API access
+- **Helmet & CORS** - Security middleware
+
+### Shared (`packages/shared/`)
+- **TypeScript Interfaces** - Shared types between frontend and backend
+- **Common Utilities** - Shared helper functions
 
 ### Development Tools
-- **ESLint** - Code linting and formatting
-- **TypeScript** - Static type checking
-- **Vite** - Development server and bundling
+- **Turborepo** - Monorepo build orchestration
+- **npm Workspaces** - Package management
+- **ESLint** - Code linting across all packages
+- **TypeScript** - Full-stack type safety
 
 ## 📁 Project Structure
 
-```
-wildeditor/
-├── src/
-│   ├── components/          # React components
-│   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utility libraries
-│   ├── types/              # TypeScript type definitions
-│   └── main.tsx            # Application entry point
-├── public/                 # Static assets
-├── docs/                   # Documentation
-│   ├── WILDERNESS_SYSTEM.md    # Game system documentation
-│   ├── WILDERNESS_PROJECT.md   # Project specifications
-│   ├── USER_GUIDE.md           # User documentation
-│   ├── API.md                  # API reference
-│   ├── DEVELOPER_GUIDE.md      # Technical documentation
-│   └── DEPLOYMENT.md           # Deployment guide
-├── package.json            # Dependencies and scripts
-├── vite.config.ts         # Vite configuration
-├── tailwind.config.js     # Tailwind CSS configuration
-└── tsconfig.json          # TypeScript configuration
-```
+See the [Monorepo Structure](#-monorepo-structure) section above for the high-level organization.
+
+### Key Directories
+
+- **`apps/frontend/src/`** - React application source
+  - `components/` - UI components (MapCanvas, ToolPalette, etc.)
+  - `hooks/` - Custom React hooks (useEditor, useAuth)
+  - `services/` - API client and external integrations
+  - `lib/` - Utility libraries (Supabase client)
+  - `types/` - TypeScript type imports from shared
+
+- **`apps/backend/src/`** - Express API source
+  - `routes/` - API endpoint definitions
+  - `controllers/` - Request handling logic
+  - `middleware/` - Authentication and validation
+  - `models/` - Database models and queries
+  - `config/` - Configuration and database setup
+
+- **`packages/shared/src/`** - Shared code
+  - `types/` - TypeScript interfaces used by both frontend and backend
+
+- **`docs/`** - Comprehensive documentation
+  - `WILDERNESS_SYSTEM.md` - Game system architecture
+  - `WILDERNESS_PROJECT.md` - Project specifications
+  - `TODO.md` - Development task tracking
+  - `API.md` - API endpoint reference
 
 ## 🤝 Contributing
 

@@ -1,22 +1,53 @@
 # Wilderness Editor TODO List
 
-## Critical Issues - Must Fix Before Further Development
+## üéâ Monorepo Transformation Complete!
 
-### 1. State Management Architecture W
-- [ ] **Refactor useEditor hook** - Currently doing too much (220+ lines)
-  - [ ] Split into smaller hooks: useDrawing, useSelection, useItems
-  - [ ] Move mock data to separate file/service
-  - [ ] Implement proper state update patterns
+The project has been successfully transformed into a monorepo structure with:
+- ‚úÖ Frontend in `apps/frontend/`
+- ‚úÖ Backend API in `apps/backend/` (Express/TypeScript)
+- ‚úÖ Shared types in `packages/shared/`
+- ‚úÖ Turborepo for build orchestration
+- ‚úÖ API integration replacing mock data
+
+## üö® Immediate Setup Required
+
+### 1. Environment Configuration
+- [ ] Create `.env` files in both frontend and backend
+- [ ] Add Supabase credentials (URL, anon key, service key)
+- [ ] Verify API URL configuration (default: http://localhost:3001/api)
+- [ ] Test Supabase connection
+
+### 2. Database Setup
+- [ ] Create Supabase project if not exists
+- [ ] Enable PostGIS extension in Supabase
+- [ ] Run table creation SQL from CLAUDE.md
+- [ ] Verify tables created successfully
+- [ ] Test database connectivity from backend
+
+### 3. Development Environment
+- [ ] Install dependencies: `npm install`
+- [ ] Fix any npm workspace issues (may need npm 9+)
+- [ ] Test `npm run dev` starts both services
+- [ ] Verify frontend on :5173, backend on :3001
+- [ ] Check health endpoint: http://localhost:3001/api/health
+
+## Critical Issues - Frontend Stabilization
+
+### 1. State Management Architecture ‚ùó
+- [ ] **Refactor useEditor hook** - Now integrated with API
+  - [ ] Split API calls from UI state management
+  - [ ] Implement proper loading and error states
+  - [ ] Add optimistic updates for better UX
 - [ ] **Fix state synchronization issues**
   - [ ] Updates in PropertiesPanel don't reflect on canvas properly
   - [ ] Selected item state gets out of sync
   - [ ] Drawing state cleanup is inconsistent
-- [ ] **Consider state management library** (Zustand/Redux/Jotai)
-  - [ ] Global state for items (regions, paths, points)
-  - [ ] Undo/redo support
-  - [ ] Better performance with selective re-renders
+- [ ] **API Integration Polish**
+  - [ ] Add retry logic for failed requests
+  - [ ] Implement proper error boundaries
+  - [ ] Add request debouncing where appropriate
 
-### 2. Selection Tool Bugs =
+### 2. Selection Tool Bugs üêõ
 - [ ] **Fix selection detection in MapCanvas**
   - [ ] Current implementation uses crude distance checks
   - [ ] Need proper point-in-polygon algorithm for regions
@@ -31,7 +62,7 @@
   - [ ] Marquee selection tool
   - [ ] Bulk operations
 
-### 3. Drawing Tools Completion <®
+### 3. Drawing Tools Completion üé®
 - [ ] **Polygon Tool**
   - [ ] Fix polygon closing - currently requires manual finishDrawing()
   - [ ] Add click-on-first-point to close
@@ -52,7 +83,7 @@
   - [ ] Snap-to-grid option
   - [ ] Snap-to-vertex option
 
-### 4. Coordinate System Issues =–
+### 4. Coordinate System Issues üìê
 - [ ] **Fix coordinate editing in PropertiesPanel**
   - [ ] Changes to coordinates don't update canvas
   - [ ] updateSelectedItem doesn't properly detect coordinate changes
@@ -65,7 +96,7 @@
   - [ ] Currently rounds to integers - is this desired?
   - [ ] Consider decimal support for smoother drawing
 
-### 5. Canvas Performance & Rendering <Ø
+### 5. Canvas Performance & Rendering <ÔøΩ
 - [ ] **Optimize MapCanvas component (356 lines)**
   - [ ] Split into smaller components
   - [ ] Memoize expensive calculations
@@ -84,7 +115,7 @@
 
 ## High Priority Features
 
-### 6. Error Handling & Validation =·
+### 6. Error Handling & Validation =ÔøΩ
 - [ ] **Add error boundaries**
   - [ ] Wrap MapCanvas in error boundary
   - [ ] Wrap PropertiesPanel in error boundary
@@ -99,7 +130,7 @@
   - [ ] Add proper error types
   - [ ] Strict null checks
 
-### 7. User Experience Improvements =´
+### 7. User Experience Improvements =ÔøΩ
 - [ ] **Visual feedback**
   - [ ] Loading states for async operations
   - [ ] Success/error toasts
@@ -117,7 +148,7 @@
   - [ ] High contrast mode
   - [ ] Focus indicators
 
-### 8. Data Persistence =æ
+### 8. Data Persistence =ÔøΩ
 - [ ] **Local storage**
   - [ ] Save work in progress
   - [ ] Recover from browser crash
@@ -148,7 +179,7 @@
   - [ ] Scale regions/paths
   - [ ] Mirror/flip
 
-### 10. Layer System Enhancements <ö
+### 10. Layer System Enhancements <ÔøΩ
 - [ ] **Layer management**
   - [ ] Reorder layers
   - [ ] Layer opacity
@@ -160,7 +191,7 @@
   - [ ] Stroke width options
   - [ ] Label display toggle
 
-### 11. Testing Infrastructure >Í
+### 11. Testing Infrastructure >ÔøΩ
 - [ ] **Unit tests**
   - [ ] Test coordinate conversions
   - [ ] Test selection algorithms
@@ -177,7 +208,7 @@
 
 ## Low Priority Features
 
-### 12. Advanced Features =Ä
+### 12. Advanced Features =ÔøΩ
 - [ ] **Collaboration**
   - [ ] WebSocket for real-time updates
   - [ ] User cursors
@@ -193,7 +224,7 @@
   - [ ] Minimap navigation
   - [ ] Measurement tools
 
-### 13. Export/Import Features =‰
+### 13. Export/Import Features =ÔøΩ
 - [ ] **Export formats**
   - [ ] JSON export
   - [ ] SQL export
@@ -204,7 +235,7 @@
   - [ ] CSV coordinate import
   - [ ] Batch import
 
-### 14. Documentation & Help =⁄
+### 14. Documentation & Help =ÔøΩ
 - [ ] **User documentation**
   - [ ] Getting started guide
   - [ ] Video tutorials
@@ -216,9 +247,22 @@
   - [ ] Contributing guidelines
   - [ ] Plugin system
 
-## Backend Integration (Next Phase)
+## Backend Enhancement & Python Migration
 
-### 15. API Development =
+### 15. Current Backend Status ‚úÖ
+- [x] **Express/TypeScript API** - Temporary implementation complete
+  - [x] RESTful endpoints for regions, paths, points
+  - [x] Supabase integration
+  - [x] JWT authentication middleware
+  - [x] CORS and security configured
+- [ ] **Production Readiness**
+  - [ ] Add request validation (Joi/Zod)
+  - [ ] Implement rate limiting
+  - [ ] Add API documentation (Swagger/OpenAPI)
+  - [ ] Set up logging (Winston/Pino)
+  - [ ] Add monitoring/metrics
+
+### 16. Python Backend Migration üêç
 - [ ] **Python FastAPI backend**
   - [ ] Project setup
   - [ ] Database models
@@ -268,7 +312,8 @@
 
 ---
 
-*Last Updated: January 29, 2025*
-*Priority: Critical > High > Medium > Low*
+*Last Updated: January 30, 2025*
+*Status: Monorepo transformation complete, backend API operational*
+*Priority: Immediate Setup > Critical > High > Medium > Low*
 *Estimated effort to stabilize current features: 2-3 weeks*
 *Estimated effort for complete feature set: 2-3 months*

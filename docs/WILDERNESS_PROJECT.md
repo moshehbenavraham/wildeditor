@@ -65,26 +65,44 @@ This architecture ensures:
 - Game logic remains in Python/C code
 - Database integrity is maintained by the backend
 
-### Current Implementation (as of January 2025)
+### Current Implementation (as of January 30, 2025)
+
+#### Monorepo Architecture ✅ IMPLEMENTED
+- **Structure**: npm workspaces with Turborepo
+- **Packages**: apps/frontend, apps/backend, packages/shared
+- **Development**: Unified `npm run dev` starts both services
+- **Type Safety**: Shared types across frontend and backend
 
 #### Frontend Stack (Implemented)
 - **Framework**: React 18.3 with TypeScript 5.5
 - **Build Tool**: Vite 7.0
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
-- **Authentication**: Supabase Auth (UI sessions only)
-- **State Management**: React hooks with local session tracking
-- **API Client**: Axios or Fetch for backend communication
+- **Authentication**: Supabase Auth (JWT tokens)
+- **State Management**: React hooks with API integration
+- **API Client**: Custom fetch-based client with error handling
+- **Location**: `apps/frontend/`
+- **Port**: 5173
 - **Deployment**: Netlify with SPA routing
 
-#### Backend Stack (To Be Implemented)
-- **Framework**: Python FastAPI (recommended for async support)
-- **Database**: MySQL 5.7+ with spatial extensions
+#### Backend Stack (Implemented - Temporary Node.js)
+- **Framework**: Express.js with TypeScript
+- **Database**: Supabase (PostgreSQL with PostGIS)
+- **Authentication**: Supabase JWT verification middleware
+- **API**: RESTful endpoints for regions, paths, points
+- **Security**: Helmet, CORS, request validation
+- **Location**: `apps/backend/`
+- **Port**: 3001
+- **Note**: This is a temporary implementation to be replaced with Python
+
+#### Planned Python Backend (Next Phase)
+- **Framework**: Python FastAPI
+- **Database**: Same Supabase PostgreSQL
 - **ORM**: SQLAlchemy with GeoAlchemy2
-- **API**: RESTful with OpenAPI documentation
-- **Authentication**: Token-based API authentication
+- **API**: Identical endpoints to Express version
+- **Authentication**: Same Supabase JWT verification
 - **Validation**: Pydantic models for request/response
-- **Spatial Operations**: MySQL spatial functions via SQL
+- **Migration**: Drop-in replacement for Express backend
 
 ### Database Schema
 ```sql
@@ -342,36 +360,88 @@ The React frontend will communicate with the Python backend via these RESTful en
 ## Development Repository
 - **Name**: wildeditor
 - **URL**: https://wildedit.luminarimud.com
-- **Structure**:
+- **Structure** (Monorepo):
   ```
   /
-  ├── src/
-  │   ├── components/     # UI components
-  │   ├── hooks/          # Custom React hooks
-  │   ├── lib/            # External integrations
-  │   └── types/          # TypeScript definitions
-  ├── docs/
-  │   ├── WILDERNESS_PROJECT.md
-  │   ├── WILDERNESS_SYSTEM.md
-  │   └── AUDIT.md
-  ├── public/
-  └── config files (vite, tailwind, etc.)
+  ├── apps/
+  │   ├── frontend/               # React application
+  │   │   ├── src/
+  │   │   │   ├── components/     # UI components
+  │   │   │   ├── hooks/          # Custom React hooks
+  │   │   │   ├── services/       # API client
+  │   │   │   ├── lib/            # External integrations
+  │   │   │   └── types/          # Type imports
+  │   │   └── [config files]
+  │   └── backend/                # Express API (temporary)
+  │       ├── src/
+  │       │   ├── controllers/    # Request handlers
+  │       │   ├── routes/         # API routes
+  │       │   ├── middleware/     # Auth & validation
+  │       │   └── models/         # Database models
+  │       └── [config files]
+  ├── packages/
+  │   └── shared/                 # Shared types & utilities
+  │       └── src/types/          # TypeScript interfaces
+  ├── docs/                       # All documentation
+  ├── package.json                # Root workspace config
+  ├── turbo.json                  # Turborepo config
+  └── [other config files]
   ```
 
 ## Getting Started (Development)
-1. Clone repository
-2. Install dependencies: `npm install`
-3. Copy `.env.example` to `.env.local`
-4. Configure Supabase credentials in `.env.local`
-5. Start development server: `npm run dev`
-6. Access at `http://localhost:5173`
+
+### Prerequisites
+- Node.js 18+ and npm 9+ (for workspace support)
+- Supabase account with project created
+- Git
+
+### Setup Instructions
+1. **Clone repository**
+   ```bash
+   git clone https://github.com/moshehbenavraham/wildeditor.git
+   cd wildeditor
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Supabase credentials:
+   # - VITE_SUPABASE_URL (frontend)
+   # - VITE_SUPABASE_ANON_KEY (frontend)
+   # - SUPABASE_URL (backend)
+   # - SUPABASE_SERVICE_KEY (backend)
+   ```
+
+4. **Create database tables**
+   - Open Supabase dashboard
+   - Go to SQL Editor
+   - Run the SQL from Database Schema section above
+   - Enable PostGIS extension if needed
+
+5. **Start development servers**
+   ```bash
+   npm run dev  # Starts both frontend and backend
+   ```
+
+6. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:3001/api
+   - Health check: http://localhost:3001/api/health
 
 ### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript compiler
+- `npm run dev` - Start all services (frontend + backend)
+- `npm run dev:frontend` - Start frontend only
+- `npm run dev:backend` - Start backend only
+- `npm run build` - Build all packages
+- `npm run lint` - Run ESLint across all packages
+- `npm run lint:fix` - Fix linting issues
+- `npm run type-check` - Type check all packages
+- `npm run clean` - Clean all build artifacts
 
 ## Testing Strategy
 - Unit tests for API endpoints
@@ -391,27 +461,28 @@ The React frontend will communicate with the Python backend via these RESTful en
 
 ## Next Steps (Q1 2025)
 
-### Monorepo Transformation (January 30, 2025)
-**IMPORTANT**: Before backend development, we're restructuring the project to a monorepo architecture using Bolt.new. This will:
-- Create a proper separation between frontend and backend code
-- Add a temporary Node.js/Express backend (to be replaced with Python later)
-- Extract shared types to a common package
-- Enable parallel development of frontend fixes and backend API
+### Monorepo Transformation ✅ COMPLETED (January 30, 2025)
+Successfully restructured the project to a monorepo architecture using Bolt.new:
+- ✅ Created proper separation between frontend and backend code
+- ✅ Added temporary Node.js/Express backend (to be replaced with Python)
+- ✅ Extracted shared types to common package
+- ✅ Connected frontend to use API instead of mock data
+- ✅ Enabled parallel development with Turborepo
 
-**Transformation Plan**:
-1. Use Bolt.new to restructure into monorepo (apps/frontend, apps/backend, packages/shared)
-2. Create Node.js Express API matching our intended Python API structure
-3. Connect frontend to use API instead of mock data
-4. Later replace Express with Python FastAPI (identical endpoints)
+### Current Priorities (January 30, 2025)
+1. **Environment Setup**
+   - Configure Supabase credentials in .env files
+   - Create database tables in Supabase
+   - Test full stack connectivity
+   - Verify authentication flow
 
-### Immediate Priorities (Post-Transformation)
-1. **Complete Monorepo Setup**
-   - Verify all existing functionality works
-   - Test API endpoints with mock data
-   - Set up Supabase database tables
-   - Configure development environment
+2. **Frontend Stabilization**
+   - Fix state management issues identified in audit
+   - Complete drawing tool implementations
+   - Fix coordinate editing in PropertiesPanel
+   - Add proper error handling
 
-2. **Python Backend API Development** (After monorepo is stable)
+3. **Python Backend Development** (Next Phase)
    - Set up FastAPI project structure
    - Implement authentication middleware
    - Create SQLAlchemy models with GeoAlchemy2
@@ -494,4 +565,4 @@ The React frontend will communicate with the Python backend via these RESTful en
 
 ---
 
-*Last Updated: January 30, 2025 - Preparing for monorepo transformation using Bolt.new. Will create temporary Node.js backend as stepping stone to Python FastAPI. Frontend has "first-shot" implementations needing refinement.*
+*Last Updated: January 30, 2025 - Monorepo transformation complete! Project now has Express backend API (temporary) with Supabase integration. Frontend connected to API, replacing mock data. Next steps: environment setup, frontend stabilization, then Python backend development.*
