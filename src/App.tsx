@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { AuthCallback } from './components/AuthCallback';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MapCanvas } from './components/MapCanvas';
 import { ToolPalette } from './components/ToolPalette';
@@ -10,6 +11,11 @@ import { useAuth } from './hooks/useAuth';
 import { User, Settings, LogOut } from 'lucide-react';
 
 function App() {
+  // Handle auth callback route
+  if (window.location.pathname === '/auth/callback') {
+    return <AuthCallback />;
+  }
+
   const { user, signOut } = useAuth();
   const {
     state,

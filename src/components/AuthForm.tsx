@@ -22,10 +22,15 @@ export const AuthForm: React.FC = () => {
       if (isSignUp) {
         const { error } = await signUp(email, password)
         if (error) throw error
-        setMessage('Account created successfully! You can now sign in.')
+        setMessage('Account created! Please check your email and click the verification link before signing in.')
       } else {
         const { error } = await signIn(email, password)
-        if (error) throw error
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            throw new Error('Please verify your email address before signing in. Check your inbox for the verification link.')
+          }
+          throw error
+        }
       }
     } catch (error: any) {
       setError(error.message)
