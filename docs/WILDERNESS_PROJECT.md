@@ -391,8 +391,27 @@ The React frontend will communicate with the Python backend via these RESTful en
 
 ## Next Steps (Q1 2025)
 
-### Immediate Priorities
-1. **Python Backend API Development**
+### Monorepo Transformation (January 30, 2025)
+**IMPORTANT**: Before backend development, we're restructuring the project to a monorepo architecture using Bolt.new. This will:
+- Create a proper separation between frontend and backend code
+- Add a temporary Node.js/Express backend (to be replaced with Python later)
+- Extract shared types to a common package
+- Enable parallel development of frontend fixes and backend API
+
+**Transformation Plan**:
+1. Use Bolt.new to restructure into monorepo (apps/frontend, apps/backend, packages/shared)
+2. Create Node.js Express API matching our intended Python API structure
+3. Connect frontend to use API instead of mock data
+4. Later replace Express with Python FastAPI (identical endpoints)
+
+### Immediate Priorities (Post-Transformation)
+1. **Complete Monorepo Setup**
+   - Verify all existing functionality works
+   - Test API endpoints with mock data
+   - Set up Supabase database tables
+   - Configure development environment
+
+2. **Python Backend API Development** (After monorepo is stable)
    - Set up FastAPI project structure
    - Implement authentication middleware
    - Create SQLAlchemy models with GeoAlchemy2
@@ -475,4 +494,4 @@ The React frontend will communicate with the Python backend via these RESTful en
 
 ---
 
-*Last Updated: January 29, 2025 - Frontend has "first-shot" implementations of core features but significant debugging and refinement needed. Many features are partially working. The codebase needs stabilization before moving to backend development.*
+*Last Updated: January 30, 2025 - Preparing for monorepo transformation using Bolt.new. Will create temporary Node.js backend as stepping stone to Python FastAPI. Frontend has "first-shot" implementations needing refinement.*
