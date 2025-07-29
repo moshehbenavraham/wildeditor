@@ -33,7 +33,7 @@ A modern web-based visual editor for creating and managing wilderness regions, p
 
 ### Prerequisites
 - Node.js 18+ and npm
-- Access to LuminariMUD MySQL database with spatial extensions
+- Supabase project with database access
 - Modern web browser with JavaScript enabled
 
 ### Installation
@@ -52,16 +52,49 @@ A modern web-based visual editor for creating and managing wilderness regions, p
 3. **Configure environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your database and API settings
+   # Edit .env with your Supabase and API settings
    ```
 
-4. **Start development server**
+4. **Set up database tables**
+   Create the required tables in your Supabase dashboard:
+   ```sql
+   -- Enable PostGIS extension
+   create extension if not exists postgis;
+
+   -- Create tables (see Database Schema section)
+   ```
+
+5. **Start development servers**
    ```bash
+   # Start both frontend and backend
    npm run dev
+   
+   # Or start individually
+   npm run dev:frontend  # Frontend on :5173
+   npm run dev:backend   # Backend on :3001
    ```
 
-5. **Open in browser**
+6. **Open in browser**
    Navigate to `http://localhost:5173`
+
+## 🏗️ Monorepo Structure
+
+```
+wildeditor/
+├── apps/
+│   ├── frontend/          # React TypeScript frontend
+│   │   ├── src/
+│   │   ├── public/
+│   │   └── package.json
+│   └── backend/           # Express TypeScript API
+│       ├── src/
+│       └── package.json
+├── packages/
+│   └── shared/            # Shared types and utilities
+│       └── src/types/
+├── docs/                  # Documentation
+└── package.json          # Workspace root
+```
 
 ## 📖 Documentation
 

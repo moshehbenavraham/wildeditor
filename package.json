@@ -27,43 +27,30 @@
     "typescript",
     "vite",
     "spatial",
-    "mapping"
+    "mapping",
+    "monorepo"
+  ],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "preview": "vite preview",
-    "type-check": "tsc --noEmit",
-    "test": "echo \"No tests specified yet\" && exit 0",
-    "test:watch": "echo \"No tests specified yet\" && exit 0",
-    "test:coverage": "echo \"No tests specified yet\" && exit 0",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "clean": "rm -rf dist node_modules/.vite",
-    "prepare": "husky install || true"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.53.0",
-    "lucide-react": "^0.344.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean",
+    "dev:frontend": "npm run dev --workspace=@wildeditor/frontend",
+    "dev:backend": "npm run dev --workspace=@wildeditor/backend",
+    "build:frontend": "npm run build --workspace=@wildeditor/frontend",
+    "build:backend": "npm run build --workspace=@wildeditor/backend"
   },
   "devDependencies": {
-    "@eslint/js": "^9.9.1",
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.4.18",
-    "eslint": "^9.9.1",
-    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
-    "eslint-plugin-react-refresh": "^0.4.11",
-    "globals": "^15.9.0",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.5.3",
-    "typescript-eslint": "^8.3.0",
-    "vite": "^7.0.6"
+    "turbo": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
