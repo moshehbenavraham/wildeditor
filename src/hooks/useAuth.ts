@@ -32,7 +32,7 @@ export const useAuth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: 'https://wildedit.luminarimud.com/auth/callback'
       }
     })
     return { data, error }
@@ -53,7 +53,7 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: 'https://wildedit.luminarimud.com/reset-password',
     })
     return { data, error }
   }
