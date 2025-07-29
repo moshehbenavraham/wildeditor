@@ -1,13 +1,48 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "luminari-wilderness-editor",
+  "description": "A modern web-based visual editor for creating and managing wilderness regions, paths, and landmarks in the LuminariMUD game world",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "author": {
+    "name": "Max aka Mosheh",
+    "email": "moshehwebservices@live.com",
+    "url": "https://github.com/moshehbenavraham"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moshehbenavraham/wildeditor.git"
+  },
+  "homepage": "https://github.com/moshehbenavraham/wildeditor#readme",
+  "bugs": {
+    "url": "https://github.com/moshehbenavraham/wildeditor/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mud",
+    "luminari",
+    "wilderness",
+    "editor",
+    "react",
+    "typescript",
+    "vite",
+    "spatial",
+    "mapping"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "test": "echo \"No tests specified yet\" && exit 0",
+    "test:watch": "echo \"No tests specified yet\" && exit 0",
+    "test:coverage": "echo \"No tests specified yet\" && exit 0",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "clean": "rm -rf dist node_modules/.vite",
+    "prepare": "husky install || true"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
@@ -29,6 +64,6 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2"
+    "vite": "^7.0.6"
   }
 }
