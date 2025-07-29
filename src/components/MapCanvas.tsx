@@ -41,12 +41,16 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
     
-    const canvasX = x - rect.left;
-    const canvasY = y - rect.top;
+    const canvasX = (x - rect.left);
+    const canvasY = (y - rect.top);
+    
+    // Convert to normalized coordinates (0-1)
+    const normalizedX = canvasX / (MAP_SIZE * scale);
+    const normalizedY = canvasY / (MAP_SIZE * scale);
     
     return {
-      x: Math.round(((canvasX / scale) / MAP_SIZE) * (COORDINATE_RANGE * 2) - COORDINATE_RANGE),
-      y: Math.round(COORDINATE_RANGE - ((canvasY / scale) / MAP_SIZE) * (COORDINATE_RANGE * 2))
+      x: Math.round((normalizedX * (COORDINATE_RANGE * 2)) - COORDINATE_RANGE),
+      y: Math.round(COORDINATE_RANGE - (normalizedY * (COORDINATE_RANGE * 2)))
     };
   }, [state.zoom]);
 
