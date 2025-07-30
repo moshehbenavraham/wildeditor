@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-The Luminari Wilderness Editor is a full-stack monorepo application for creating and managing wilderness areas in the LuminariMUD game world. It consists of a React/TypeScript frontend and Express/TypeScript backend (TEMPORARY - will be replaced with Python), with shared types and utilities.
+The Luminari Wilderness Editor is a full-stack monorepo application for creating and managing wilderness areas in the LuminariMUD game world. It consists of a React/TypeScript frontend and Python FastAPI backend, with shared types and utilities.
 
 **CRITICAL ARCHITECTURE NOTES**:
-- Express backend is TEMPORARY and will be replaced with Python FastAPI
-- Supabase is used for local development and temporary changes/saves
-- The CORE SYSTEM will directly modify LuminariMUD's existing MySQL spatial tables
-- Python backend will integrate directly with the game's MySQL database
+- ✅ **MIGRATION COMPLETE**: Express backend has been replaced with Python FastAPI
+- The backend now directly integrates with LuminariMUD's existing MySQL spatial tables
+- Supabase was used for initial development but production uses direct MySQL integration
+- Real-time integration with the game world through direct database access
 
 ## Common Development Commands
 
@@ -18,19 +18,17 @@ The Luminari Wilderness Editor is a full-stack monorepo application for creating
 # Install dependencies
 npm install
 
-# Start both frontend and backend
-npm run dev
-
-# Start individual services
+# Start frontend only (backend runs separately)
 npm run dev:frontend  # Frontend on :5173
-npm run dev:backend   # Backend on :3001
 
-# Build all packages
-npm run build
+# Start Python backend
+cd apps/backend/src
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-# Build individual packages
+# Build frontend
 npm run build:frontend
-npm run build:backend
+
+# Python backend doesn't need building (interpreted language)
 
 # Run linting across all packages
 npm run lint
@@ -51,7 +49,7 @@ npm run clean
 This is a monorepo using npm workspaces and Turborepo for build orchestration:
 
 - **apps/frontend/**: React 18.3 + TypeScript 5.5 + Vite
-- **apps/backend/**: Express + TypeScript + Supabase integration (TEMPORARY - Python FastAPI planned)
+- **apps/backend/**: Python 3.8+ + FastAPI + SQLAlchemy + MySQL integration
 - **packages/shared/**: Shared TypeScript types and utilities
 
 ### Technology Stack
@@ -65,12 +63,13 @@ This is a monorepo using npm workspaces and Turborepo for build orchestration:
 - **API Client**: Custom fetch-based client with error handling
 
 #### Backend (`apps/backend/`)
-- **Framework**: Express.js with TypeScript (TEMPORARY - will be Python FastAPI)
-- **Database**: Supabase (PostgreSQL with PostGIS) for development/local changes
-- **Production Database**: Direct integration with LuminariMUD's MySQL spatial tables
-- **Authentication**: Supabase JWT verification
-- **API**: RESTful endpoints with proper error handling
-- **Security**: Helmet, CORS, request validation
+- **Framework**: FastAPI (Python 3.8+) with Uvicorn ASGI server
+- **Database**: Direct MySQL integration with LuminariMUD spatial tables
+- **ORM**: SQLAlchemy for database operations
+- **Validation**: Pydantic schemas for request/response validation
+- **API**: RESTful endpoints with automatic OpenAPI documentation
+- **Authentication**: JWT token validation (configurable)
+- **Performance**: Async support for high-performance operations
 
 #### Shared (`packages/shared/`)
 - **Types**: Shared TypeScript interfaces and types
@@ -89,12 +88,12 @@ apps/frontend/src/
 └── App.tsx                 # Main application component
 
 apps/backend/src/
-├── controllers/            # Request handlers
-├── models/                 # Database models
-├── routes/                 # API route definitions
-├── middleware/             # Express middleware
-├── config/                 # Configuration files
-└── index.ts                # Express server entry point
+├── models/                 # SQLAlchemy database models
+├── schemas/                # Pydantic request/response schemas
+├── routers/                # FastAPI route handlers
+├── config/                 # Database and app configuration
+├── main.py                 # FastAPI application entry point
+└── requirements.txt        # Python dependencies
 
 packages/shared/src/
 └── types/                  # Shared TypeScript interfaces
@@ -117,27 +116,30 @@ packages/shared/src/
 
 4. **State Management**: 
    - Frontend: React hooks with API integration
-   - Backend: Supabase database with Express controllers (development)
-   - Production: Direct MySQL integration with LuminariMUD spatial tables
+   - Backend: SQLAlchemy ORM with direct MySQL database access
+   - Production: Real-time integration with LuminariMUD spatial tables
    - Real-time updates: Optimistic UI updates with API persistence
 
 5. **API Integration**: The frontend communicates with the backend via RESTful API:
-   - Authentication via Supabase JWT tokens
+   - FastAPI automatic OpenAPI documentation at `/docs`
+   - Pydantic validation for all requests and responses
    - CRUD operations for regions, paths, and points
    - Error handling and loading states
    - Optimistic updates for better UX
 
 ### Database Schema 
 
-**Development (Supabase PostgreSQL)**
+**Production (LuminariMUD MySQL Spatial Tables)**
+
+The backend now directly integrates with LuminariMUD's existing MySQL spatial database:
 
 ```sql
--- Regions table
-create table regions (
-  id uuid primary key default gen_random_uuid(),
-  vnum integer unique not null,
-  name text not null,
-  type text not null,
+-- Regions table (MySQL with spatial support)
+CREATE TABLE regions (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  vnum INT UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(100) NOT NULL,
   coordinates jsonb not null,
   properties text,
   color text,
@@ -205,10 +207,11 @@ DELETE /api/regions/:id      # Delete region (auth required)
    - API integration with loading/error states
 
 2. **Backend Development**:
-   - Express server with TypeScript
-   - Supabase database integration
-   - JWT authentication middleware
-   - RESTful API design
+   - FastAPI server with Python 3.8+
+   - SQLAlchemy ORM with MySQL integration
+   - Pydantic schemas for validation
+   - Async/await support for performance
+   - RESTful API with automatic OpenAPI docs
    - Error handling and validation
 
 3. **Shared Development**:
@@ -222,17 +225,26 @@ The monorepo uses environment variables for configuration:
 
 #### Frontend (.env)
 ```
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_API_URL=http://localhost:3001/api
+VITE_API_URL=http://localhost:8000/api
+# Authentication configuration (if needed)
+VITE_JWT_SECRET=your_jwt_secret
 ```
 
 #### Backend (.env)
 ```
-PORT=3001
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_KEY=your_supabase_service_key
+# Database configuration
+MYSQL_DATABASE_URL=mysql+pymysql://username:password@localhost/luminari_mudprod
+
+# Server configuration
+PORT=8000
+HOST=0.0.0.0
+
+# CORS configuration
 FRONTEND_URL=http://localhost:5173
+
+# Authentication (optional)
+JWT_SECRET=your_jwt_secret
+JWT_ALGORITHM=HS256
 ```
 
 Production domain: `https://wildedit.luminarimud.com`
@@ -241,10 +253,12 @@ Production domain: `https://wildedit.luminarimud.com`
 
 **Implemented**:
 - ✅ Monorepo structure with npm workspaces
-- ✅ Express backend with TypeScript
-- ✅ Supabase database integration
-- ✅ JWT authentication middleware
+- ✅ **FastAPI backend with Python 3.8+**
+- ✅ **Direct MySQL database integration**
+- ✅ **SQLAlchemy ORM models**
+- ✅ **Pydantic validation schemas**
 - ✅ RESTful API endpoints for all entities
+- ✅ **Automatic OpenAPI documentation**
 - ✅ Frontend API client with error handling
 - ✅ Optimistic UI updates
 - ✅ Shared type definitions
@@ -263,47 +277,61 @@ Production domain: `https://wildedit.luminarimud.com`
    npm install
    ```
 
-2. **Set up environment**:
+2. **Set up Python backend environment**:
    ```bash
+   # Install Python dependencies
+   cd apps/backend/src
+   pip install -r requirements.txt
+   
+   # Configure database connection
    cp .env.example .env
-   # Edit .env with your Supabase credentials
+   # Edit .env with your MySQL database credentials
    ```
 
-3. **Create database tables**:
-   - Open your Supabase dashboard
-   - Run the SQL commands from the Database Schema section
-   - Enable PostGIS extension if needed
+3. **Set up MySQL database**:
+   - Configure connection to LuminariMUD MySQL database
+   - Ensure spatial tables exist for regions, paths, points
+   - Test database connectivity
 
 4. **Start development servers**:
    ```bash
-   npm run dev  # Starts both frontend and backend
+   # Start frontend
+   npm run dev:frontend
+   
+   # Start Python backend (separate terminal)
+   cd apps/backend/src
+   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 5. **Access the application**:
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3001/api
-   - Health check: http://localhost:3001/api/health
+   - Backend API: http://localhost:8000/api
+   - API Documentation: http://localhost:8000/docs
+   - Health check: http://localhost:8000/api/health
 
 ### Common Development Tasks
 
 **Adding new features**:
 1. Define types in `packages/shared/src/types/`
-2. Add backend endpoints in `apps/backend/src/routes/`
-3. Create frontend components in `apps/frontend/src/components/`
-4. Update API client in `apps/frontend/src/services/api.ts`
-5. Test both frontend and backend integration
+2. Add Python models in `apps/backend/src/models/`
+3. Create Pydantic schemas in `apps/backend/src/schemas/`
+4. Add FastAPI endpoints in `apps/backend/src/routers/`
+5. Update frontend API client in `apps/frontend/src/services/api.ts`
+6. Test both frontend and backend integration
 
 **Debugging**:
 - Frontend: Check browser console and React DevTools
-- Backend: Check server logs and API responses
-- Database: Use Supabase dashboard for query debugging
-- Authentication: Verify JWT tokens and Supabase configuration
+- Backend: Check FastAPI server logs and uvicorn output
+- Database: Use MySQL client or GUI tools for query debugging
+- API: Use automatic OpenAPI docs at http://localhost:8000/docs
+- Authentication: Verify JWT tokens and authentication flow
 
 **Working with the monorepo**:
-- Use `npm run dev` to start everything
+- Frontend: Use `npm run dev:frontend` 
+- Backend: Run Python FastAPI server separately
 - Use workspace-specific commands: `npm run dev --workspace=@wildeditor/frontend`
-- Shared types are automatically available in both frontend and backend
-- Changes to shared package require restart of dependent services
+- Shared types are automatically available in frontend
+- Changes to shared package require frontend restart
 
 ## 📚 Documentation Reference
 
@@ -330,4 +358,4 @@ For comprehensive information beyond this technical overview, refer to:
 - **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Recent changes and version history
 - **[docs/AUDIT.md](docs/AUDIT.md)** - Code quality assessment and recommendations
 
-All documentation is kept up-to-date and reflects the current temporary Express backend → future Python FastAPI architecture.
+All documentation is kept up-to-date and reflects the current Python FastAPI backend architecture.

@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-01-30
+
+### Added
+- 🐍 **Complete Python FastAPI Backend Migration** (by Jamie McLaughlin)
+  - FastAPI application with modern async/await support
+  - SQLAlchemy ORM models for direct MySQL database integration
+  - Pydantic schemas for request/response validation and type safety
+  - FastAPI routers with automatic OpenAPI documentation generation
+  - Direct MySQL connection for LuminariMUD spatial database integration
+  - Python requirements.txt with production-ready dependencies
+  - Automatic API documentation at `/docs` endpoint
+  - Health check endpoint for monitoring and deployment verification
+- 🗄️ **MySQL Database Integration**
+  - Direct connection to LuminariMUD MySQL spatial database
+  - SQLAlchemy models for regions, paths, and points with spatial support
+  - Production-ready database configuration with connection pooling
+  - Support for MySQL spatial data types and operations
+- 📚 **Comprehensive Documentation Updates**
+  - Updated all setup and development guides for Python backend
+  - New Python development workflow documentation
+  - Updated API references and deployment instructions
+  - Migration architecture decision record (ADR-002) completed
+  - Environment configuration guides for MySQL integration
+
+### Changed
+- 🔄 **Complete Backend Architecture Migration**
+  - Migrated from Express.js/TypeScript to Python FastAPI
+  - Replaced Supabase PostgreSQL with direct MySQL integration
+  - Updated API endpoints from Express routes to FastAPI routers
+  - Changed authentication from Supabase JWT to configurable JWT validation
+  - Updated development workflow from Node.js to Python/uvicorn
+  - Changed API documentation from manual to auto-generated OpenAPI
+- 🏗️ **Development Environment Updates**
+  - Updated package.json scripts for Python backend workflow
+  - Modified development server startup from npm to uvicorn
+  - Changed API base URL from :3001 to :8000
+  - Updated environment configuration for MySQL database
+  - Modified CI/CD workflows for Python backend deployment
+- 📝 **Documentation Overhaul**
+  - Updated README.md with Python FastAPI setup instructions
+  - Revised SETUP.md for MySQL database configuration
+  - Modified CLAUDE.md to reflect new Python architecture
+  - Updated all development guides and API references
+
+### Removed
+- ❌ **Express.js Backend Infrastructure** (Migration Complete)
+  - Removed all TypeScript backend files (controllers, routes, middleware)
+  - Deleted Express.js server configuration and dependencies
+  - Removed Supabase integration from backend
+  - Eliminated Node.js backend package.json and tsconfig.json
+  - Cleaned up Express-specific middleware (auth, CORS, helmet)
+  - Removed TypeScript compilation step for backend
+- 🧹 **Legacy Dependencies and Configuration**
+  - Removed backend ESLint configuration (no longer needed for Python)
+  - Deleted TypeScript type definitions for Express backend
+  - Cleaned up Supabase service key requirements
+  - Removed Node.js backend development dependencies
+
+### Security
+- 🔒 **Enhanced Database Security**
+  - Direct MySQL connection with proper credential management
+  - Secure database URL configuration with environment variables
+  - Production-ready connection pooling and timeout handling
+- 🛡️ **API Security Improvements**
+  - FastAPI built-in request validation with Pydantic schemas
+  - Type-safe API endpoints preventing injection attacks
+  - Configurable JWT authentication for production deployment
+
+### Migration Notes
+- ✅ **Express to FastAPI migration completed successfully**
+- ✅ **All API endpoints maintained compatibility**
+- ✅ **Database integration ready for production LuminariMUD deployment**
+- ✅ **Development workflow updated and documented**
+- ✅ **CI/CD pipeline compatible with Python backend**
+
 ### Added
 - **🎯 Drawing System Overhaul**: Comprehensive audit and stability improvements
   - Geometric utility functions for accurate point-in-polygon selection
@@ -100,9 +175,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Full-stack monorepo architecture with npm workspaces and Turborepo
-- Express.js backend with TypeScript (TEMPORARY - will be replaced with Python FastAPI)
-- Supabase database integration with PostgreSQL (for local development)
-- Future Python backend will integrate directly with LuminariMUD's MySQL spatial tables
+- Express.js backend with TypeScript (REPLACED in v0.3.0 with Python FastAPI)
+- Supabase database integration with PostgreSQL (REPLACED in v0.3.0 with MySQL)
+- Temporary backend solution - migrated to Python FastAPI in v0.3.0
 - JWT authentication middleware for API protection
 - RESTful API endpoints for regions, paths, and points
 - Shared types package for frontend-backend consistency

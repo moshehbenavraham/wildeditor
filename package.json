@@ -25,6 +25,8 @@
     "editor",
     "react",
     "typescript",
+    "python",
+    "fastapi",
     "vite",
     "spatial",
     "mapping",
@@ -44,11 +46,12 @@
     "test": "turbo run test",
     "clean": "turbo run clean",
     "dev:frontend": "npm run dev --workspace=@wildeditor/frontend",
-    "dev:backend": "npm run dev --workspace=@wildeditor/backend",
+    "dev:backend": "echo 'Backend is now Python FastAPI. Run: cd apps/backend/src && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000'",
     "build:frontend": "npm run build --workspace=@wildeditor/frontend",
-    "build:backend": "npm run build --workspace=@wildeditor/backend",
-    "build:all": "turbo run build",
-    "start": "npm run start --workspace=@wildeditor/backend"
+    "build:backend": "echo 'Python backend does not require building (interpreted language)'",
+    "build:all": "npm run build:frontend",
+    "start:backend": "cd apps/backend/src && python -m uvicorn main:app --host 0.0.0.0 --port 8000",
+    "install:backend": "cd apps/backend/src && pip install -r requirements.txt"
   },
   "devDependencies": {
     "turbo": "^2.0.0"

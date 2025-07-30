@@ -1,49 +1,80 @@
 # Quick Setup Guide
 
-## 1. Configure Environment Variables
+## 1. Install Prerequisites
 
-You need to update the `.env` files with your actual Supabase credentials:
+### System Requirements
+- **Node.js 18+** and **npm 9+** (for frontend)
+- **Python 3.8+** (for FastAPI backend)
+- **MySQL Server** (or access to LuminariMUD database)
+- **Git**
+
+### Install Python Dependencies
+```bash
+cd apps/backend/src
+pip install -r requirements.txt
+```
+
+## 2. Configure Environment Variables
 
 ### Frontend Configuration (`apps/frontend/.env`)
 ```
-VITE_SUPABASE_URL=your_actual_supabase_url
-VITE_SUPABASE_ANON_KEY=your_actual_anon_key
+VITE_API_URL=http://localhost:8000/api
 ```
 
 ### Backend Configuration (`apps/backend/.env`)
 ```
-SUPABASE_URL=your_actual_supabase_url
-SUPABASE_SERVICE_KEY=your_actual_service_key
+# Database Configuration
+MYSQL_DATABASE_URL=mysql+pymysql://username:password@localhost/luminari_mudprod
+
+# Server Configuration
+PORT=8000
+HOST=0.0.0.0
+
+# CORS Configuration
+FRONTEND_URL=http://localhost:5173
 ```
 
-## 2. Set Up Database
+## 3. Set Up MySQL Database
 
-1. Open your Supabase project dashboard
-2. Go to the SQL Editor
-3. Copy and run the contents of `database-setup.sql`
-4. This will create all necessary tables and enable Row Level Security
+1. Ensure MySQL server is running with spatial support
+2. Connect to your LuminariMUD database (or create test database)
+3. Verify the following tables exist with spatial columns:
+   - `regions` (with spatial polygon column)
+   - `paths` (with spatial linestring column) 
+   - `points` (with spatial point column)
+4. Test database connectivity
 
-## 3. Run the Application
+## 4. Run the Application
 
+### Start Frontend (Terminal 1)
 ```bash
-# Start both frontend and backend
-npm run dev
+npm run dev:frontend
 ```
 
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3001/api
-- Health check: http://localhost:3001/api/health
+### Start Python Backend (Terminal 2)
+```bash
+cd apps/backend/src
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
-## 4. Test the Application
+### Access Points
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000/api
+- **API Documentation**: http://localhost:8000/docs
+- **Health check**: http://localhost:8000/api/health
 
-1. Open http://localhost:5173 in your browser
-2. The application should load (you may see auth errors until you configure Supabase)
-3. Check the browser console for any errors
-4. Test the backend health endpoint: http://localhost:3001/api/health
+## 5. Test the Application
+
+1. **Frontend Test**: Open http://localhost:5173 in your browser
+2. **Backend Test**: Visit http://localhost:8000/docs for API documentation
+3. **Health Check**: Test http://localhost:8000/api/health
+4. **Database**: Verify API can connect to MySQL database
+5. Check browser console and backend logs for any errors
 
 ## Next Steps
 
-Once you've added your Supabase credentials:
-1. Create a user account through Supabase Auth
-2. Sign in to start using the editor
-3. Draw regions, paths, and points on the map
+Once everything is running:
+1. Start using the wilderness editor interface
+2. Draw regions, paths, and points on the map
+3. Data will be saved directly to the MySQL database
+4. Changes will be immediately available in LuminariMUD (if connected to production DB)

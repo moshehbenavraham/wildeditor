@@ -1,13 +1,14 @@
 # Luminari Wilderness Editor
 
-A **production-ready** full-stack monorepo application for creating and managing wilderness regions, paths, and landmarks in the LuminariMUD game world. Built with React/TypeScript frontend, Express/TypeScript backend, and integrated with Supabase PostgreSQL spatial databases.
+A **production-ready** full-stack monorepo application for creating and managing wilderness regions, paths, and landmarks in the LuminariMUD game world. Built with React/TypeScript frontend, Python FastAPI backend, and integrated with LuminariMUD's MySQL spatial databases.
 
 > ✅ **System Status**: **STABLE** - Major stability and performance improvements completed. System confidence level: **85%**
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-blue.svg)
 ![React](https://img.shields.io/badge/React-18.3+-blue.svg)
-![Express](https://img.shields.io/badge/Express-4.18+-green.svg)
+![Python](https://img.shields.io/badge/Python-3.8+-green.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
 ![Turborepo](https://img.shields.io/badge/Turborepo-2.0+-red.svg)
 
 ## 🌟 Features
@@ -39,8 +40,9 @@ A **production-ready** full-stack monorepo application for creating and managing
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm 9+ (for workspace support)
-- Supabase project with database access
+- Node.js 18+ and npm 9+ (for frontend workspace support)
+- Python 3.8+ (for FastAPI backend)
+- Access to LuminariMUD MySQL database (or compatible MySQL setup)
 - Modern web browser with JavaScript enabled
 - Git
 
@@ -54,41 +56,51 @@ A **production-ready** full-stack monorepo application for creating and managing
 
 2. **Install dependencies**
    ```bash
+   # Install frontend dependencies
    npm install
+   
+   # Install Python backend dependencies
+   cd apps/backend/src
+   pip install -r requirements.txt
    ```
 
 3. **Configure environment**
    ```bash
-   cp .env.example .env
-   # Edit .env with your credentials:
-   # Frontend (apps/frontend/.env):
-   #   VITE_SUPABASE_URL=your_supabase_url
-   #   VITE_SUPABASE_ANON_KEY=your_anon_key
-   #   VITE_API_URL=http://localhost:3001/api
-   # Backend (apps/backend/.env):
-   #   SUPABASE_URL=your_supabase_url
-   #   SUPABASE_SERVICE_KEY=your_service_key
-   #   PORT=3001
+   # Frontend configuration
+   cp apps/frontend/.env.example apps/frontend/.env
+   # Edit apps/frontend/.env:
+   #   VITE_API_URL=http://localhost:8000/api
+   
+   # Backend configuration  
+   cp apps/backend/.env.example apps/backend/.env
+   # Edit apps/backend/.env:
+   #   MYSQL_DATABASE_URL=mysql+pymysql://username:password@localhost/luminari_mudprod
+   #   PORT=8000
+   #   HOST=0.0.0.0
    ```
 
-4. **Set up database tables**
-   Create the required tables in your Supabase dashboard:
+4. **Set up MySQL database**
+   Ensure your MySQL database has the required spatial tables:
    ```sql
-   -- Enable PostGIS extension
-   create extension if not exists postgis;
-
-   -- Create tables (see Database Schema section)
+   -- Ensure spatial support is enabled
+   -- Create/verify regions, paths, points tables
+   -- (See Database Schema section for details)
    ```
 
 5. **Start development servers**
    ```bash
-   # Start both frontend and backend
-   npm run dev
-   
-   # Or start individually
+   # Start frontend (Terminal 1)
    npm run dev:frontend  # Frontend on :5173
-   npm run dev:backend   # Backend on :3001
+   
+   # Start Python backend (Terminal 2)
+   cd apps/backend/src
+   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
+
+6. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000/api
+   - API Documentation: http://localhost:8000/docs
 
 6. **Open in browser**
    Navigate to `http://localhost:5173`

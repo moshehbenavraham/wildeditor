@@ -26,7 +26,8 @@
       "Bash(gh run list:*)",
       "WebFetch(domain:docs.netlify.com)",
       "Bash(git checkout:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
