@@ -7,21 +7,38 @@ This guide covers deployment procedures, environment setup, and configuration fo
 ### Deployment Architecture
 
 ```
+DEVELOPMENT:
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   CDN/Static    │    │   Backend API   │    │   Database      │
-│   (Frontend)    │    │   (FastAPI)     │    │   (MySQL)       │
+│   Frontend      │    │   Express API   │    │   Supabase      │
+│   (Netlify)     │◄──►│   (TEMPORARY)   │◄──►│   PostgreSQL    │
 │                 │    │                 │    │                 │
-│ - React Build   │◄──►│ - Authentication│◄──►│ - Spatial Data  │
-│ - Static Assets │    │ - API Endpoints │    │ - User Sessions │
-│ - Caching       │    │ - Rate Limiting │    │ - Audit Logs    │
+│ - React Build   │    │ - Authentication│    │ - Development   │
+│ - Static Assets │    │ - API Endpoints │    │ - Local Changes │
+│ - CDN Caching   │    │ - JWT Tokens    │    │ - Temp Storage  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+
+PRODUCTION (Future):
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Python API    │    │ LuminariMUD     │
+│   (CDN/Static)  │◄──►│   (FastAPI)     │◄──►│   MySQL         │
+│                 │    │                 │    │                 │
+│ - React Build   │    │ - Authentication│    │ - Game Tables   │
+│ - Static Assets │    │ - API Endpoints │    │ - Spatial Data  │
+│ - Caching       │    │ - Rate Limiting │    │ - Live Game DB  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ### Supported Platforms
 
-- **Frontend**: Netlify, Vercel, AWS S3 + CloudFront, GitHub Pages
-- **Backend**: AWS EC2, Google Cloud Run, DigitalOcean Droplets, Heroku
-- **Database**: AWS RDS, Google Cloud SQL, DigitalOcean Managed Databases
+**Development/Current:**
+- **Frontend**: Netlify (current), Vercel, AWS S3 + CloudFront
+- **Backend**: Express.js (TEMPORARY) - any Node.js hosting
+- **Database**: Supabase PostgreSQL (development only)
+
+**Production/Future:**
+- **Frontend**: Same as development
+- **Backend**: Python FastAPI - AWS EC2, Google Cloud Run, DigitalOcean
+- **Database**: Direct connection to LuminariMUD's existing MySQL server
 
 ## 🏗️ Environment Setup
 
@@ -51,16 +68,21 @@ VITE_MAX_ZOOM=4
 
 #### Backend (.env.production)
 ```bash
-# Database
-DATABASE_URL=mysql://user:password@host:port/database
+# Current Express Backend (TEMPORARY)
+PORT=3001
+NODE_ENV=production
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_KEY=your_supabase_service_key
+FRONTEND_URL=https://wildedit.luminarimud.com
+
+# Future Python Backend (Production)
+DATABASE_URL=mysql://user:password@luminari-mysql-host:port/database
 DATABASE_POOL_SIZE=20
 DATABASE_TIMEOUT=30
 
 # Authentication
 JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRATION=86400
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # API Configuration
 API_HOST=0.0.0.0
@@ -77,7 +99,7 @@ SENTRY_DSN=https://your-sentry-dsn
 LOG_LEVEL=INFO
 ```
 
-## 📦 Frontend Deployment
+## 📦 Frontend Deployment (Monorepo)
 
 ### Build Process
 
@@ -86,14 +108,15 @@ LOG_LEVEL=INFO
    npm ci --production
    ```
 
-2. **Build for production**
+2. **Build frontend package**
    ```bash
-   npm run build
+   npm run build:frontend
+   # Or build all packages: npm run build
    ```
 
 3. **Verify build**
    ```bash
-   npm run preview
+   npm run preview --workspace=@wildeditor/frontend
    ```
 
 ### Netlify Deployment

@@ -18,6 +18,11 @@ export class PathModel {
   }
 
   static async findById(id: string): Promise<PathEntity | null> {
+    if (!supabase) {
+      console.warn('Supabase not configured - returning null');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('paths')
       .select('*')
@@ -32,6 +37,10 @@ export class PathModel {
   }
 
   static async create(path: Omit<Path, 'id'>): Promise<PathEntity> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot create path');
+    }
+
     const { data, error } = await supabase
       .from('paths')
       .insert({
@@ -49,6 +58,10 @@ export class PathModel {
   }
 
   static async update(id: string, updates: Partial<Path>): Promise<PathEntity> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot update path');
+    }
+
     const { data, error } = await supabase
       .from('paths')
       .update(updates)
@@ -61,6 +74,10 @@ export class PathModel {
   }
 
   static async delete(id: string): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot delete path');
+    }
+
     const { error } = await supabase
       .from('paths')
       .delete()

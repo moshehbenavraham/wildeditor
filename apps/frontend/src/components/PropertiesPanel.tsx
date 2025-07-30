@@ -42,9 +42,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     );
   }
 
-  const isRegion = 'vnum' in selectedItem && 'coordinates' in selectedItem && selectedItem.coordinates.length > 2;
-  const isPath = 'vnum' in selectedItem && 'coordinates' in selectedItem && selectedItem.coordinates.length <= 2;
   const isPoint = 'coordinate' in selectedItem;
+  const isRegion = !isPoint && 'vnum' in selectedItem && 'coordinates' in selectedItem && selectedItem.coordinates.length >= 3;
+  const isPath = !isPoint && !isRegion && 'vnum' in selectedItem && 'coordinates' in selectedItem;
 
   return (
     <div className="p-4 bg-gray-900 space-y-4 max-h-full overflow-y-auto">

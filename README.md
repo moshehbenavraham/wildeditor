@@ -108,18 +108,45 @@ wildeditor/
 
 ## 📖 Documentation
 
-- **[User Guide](docs/USER_GUIDE.md)** - How to use the wilderness editor
-- **[API Documentation](docs/API.md)** - Backend API reference
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Technical architecture and development
+### 🚀 Getting Started
+- **[User Guide](docs/USER_GUIDE.md)** - How to use the wilderness editor interface and tools
+- **[Setup Guide](SETUP.md)** - Quick start installation and configuration
+
+### 👩‍💻 Development
+- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Technical architecture and development workflow
+- **[API Documentation](docs/API.md)** - Backend API reference and endpoints
+- **[Testing Guide](docs/TESTING.md)** - Testing strategy and procedures
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
+
+### 🚀 Deployment & Operations
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
-- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
+- **[Migration Guide](docs/MIGRATION.md)** - Express to Python FastAPI migration
+- **[Integration Guide](docs/INTEGRATION.md)** - LuminariMUD game server integration
+- **[Monitoring Guide](docs/MONITORING.md)** - Application monitoring and observability
+- **[Backup Guide](docs/BACKUP.md)** - Database backup and recovery procedures
+- **[Disaster Recovery](docs/DISASTER_RECOVERY.md)** - Emergency response procedures
+
+### 🔒 Security & Compliance
+- **[Security Policy](SECURITY.md)** - Security practices and vulnerability reporting
+- **[Changelog](docs/CHANGELOG.md)** - Version history and release notes
+- **[Code Audit](docs/AUDIT.md)** - Security and code quality assessment
+
+### 🏗️ Architecture & Planning
+- **[Wilderness System](docs/WILDERNESS_SYSTEM.md)** - LuminariMUD wilderness architecture
+- **[Project Specifications](docs/WILDERNESS_PROJECT.md)** - Detailed project requirements
+- **[Development TODO](docs/TODO.md)** - Current tasks and development roadmap
+- **[Architecture Decisions](docs/adr/)** - ADR records for major technical decisions
+
+### 📋 Reference
+- **[Claude Instructions](CLAUDE.md)** - AI assistant guidance for this codebase
+- **[Roadmap](ROADMAP.md)** - Long-term project vision and milestones
 
 ## 🎮 Integration with LuminariMUD
 
 This editor integrates seamlessly with the LuminariMUD wilderness system:
 
 - **Coordinate System**: Uses the same -1024 to +1024 coordinate space
-- **Database Compatibility**: Works directly with existing MySQL spatial tables
+- **Database Compatibility**: Works directly with existing LuminariMUD MySQL spatial tables
 - **Region Types**: Supports all game region types (Geographic, Encounter, Sector Transform, Sector Override)
 - **Path Types**: Compatible with roads, rivers, and other path types
 - **Real-time Updates**: Changes reflect immediately in the game world
@@ -135,9 +162,10 @@ This editor integrates seamlessly with the LuminariMUD wilderness system:
 - **Supabase Auth** - User authentication
 
 ### Backend (`apps/backend/`)
-- **Express.js** - Node.js web framework (temporary, will be Python)
+- **Express.js** - Node.js web framework (temporary, will be replaced with Python)
 - **TypeScript** - Type-safe backend development
-- **Supabase** - PostgreSQL with PostGIS for spatial data
+- **Supabase** - PostgreSQL with PostGIS for development/local changes
+- **MySQL Integration** - Direct connection to LuminariMUD's existing spatial tables
 - **JWT Authentication** - Secure API access
 - **Helmet & CORS** - Security middleware
 
@@ -174,11 +202,7 @@ See the [Monorepo Structure](#-monorepo-structure) section above for the high-le
 - **`packages/shared/src/`** - Shared code
   - `types/` - TypeScript interfaces used by both frontend and backend
 
-- **`docs/`** - Comprehensive documentation
-  - `WILDERNESS_SYSTEM.md` - Game system architecture
-  - `WILDERNESS_PROJECT.md` - Project specifications
-  - `TODO.md` - Development task tracking
-  - `API.md` - API endpoint reference
+- **`docs/`** - Comprehensive documentation (see Documentation section above)
 
 ## 🤝 Contributing
 

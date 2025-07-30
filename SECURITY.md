@@ -79,10 +79,12 @@ We prefer all communications to be in English.
 ## Security Features
 
 ### Authentication & Authorization
-- OAuth 2.0 integration with Google
+- Supabase OAuth integration (current)
 - JWT token-based authentication
 - Role-based access control
 - Session management and timeout
+- Express.js authentication middleware (temporary)
+- Future: Enhanced authentication in Python FastAPI backend
 
 ### Data Protection
 - Input validation and sanitization
@@ -104,6 +106,8 @@ We prefer all communications to be in English.
 - Regular security updates
 - Encrypted connections
 - Backup encryption
+- Current: Supabase PostgreSQL with Row Level Security
+- Future: Direct MySQL integration with LuminariMUD (enhanced security required)
 
 ## Vulnerability Disclosure Policy
 

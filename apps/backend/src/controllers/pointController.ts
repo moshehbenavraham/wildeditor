@@ -31,6 +31,11 @@ export const getPoint = async (req: Request, res: Response) => {
 export const createPoint = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const pointData = req.body;
+    
+    // Basic validation
+    if (!pointData.name || !pointData.type || !pointData.coordinate) {
+      return res.status(400).json({ error: 'Missing required fields: name, type, coordinate' });
+    }
     const point = await PointModel.create(pointData);
     res.status(201).json({ data: point, message: 'Point created successfully' });
   } catch (error) {
@@ -43,6 +48,11 @@ export const updatePoint = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    
+    // Basic validation
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No fields provided for update' });
+    }
     const point = await PointModel.update(id, updates);
     res.json({ data: point, message: 'Point updated successfully' });
   } catch (error) {

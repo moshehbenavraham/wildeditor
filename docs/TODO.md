@@ -4,10 +4,12 @@
 
 The project has been successfully transformed into a monorepo structure with:
 - ✅ Frontend in `apps/frontend/`
-- ✅ Backend API in `apps/backend/` (Express/TypeScript)
+- ✅ Backend API in `apps/backend/` (Express/TypeScript - TEMPORARY)
 - ✅ Shared types in `packages/shared/`
 - ✅ Turborepo for build orchestration
 - ✅ API integration replacing mock data
+
+**NEXT MAJOR MILESTONE**: Migrate from Express backend to Python FastAPI with direct LuminariMUD MySQL integration.
 
 ## 🚨 Immediate Setup Required
 

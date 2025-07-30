@@ -11,11 +11,6 @@ import { useAuth } from './hooks/useAuth';
 import { User, Settings, LogOut } from 'lucide-react';
 
 function App() {
-  // Handle auth callback route
-  if (window.location.pathname === '/auth/callback') {
-    return <AuthCallback />;
-  }
-
   const { user, signOut } = useAuth();
   const {
     state,
@@ -64,6 +59,11 @@ function App() {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [setTool, selectItem, state.isDrawing, finishDrawing]);
+
+  // Handle auth callback route
+  if (window.location.pathname === '/auth/callback') {
+    return <AuthCallback />;
+  }
 
   const handleSignOut = async () => {
     await signOut();

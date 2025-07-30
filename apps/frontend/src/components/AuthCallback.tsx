@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
 import { MapPin, CheckCircle, AlertCircle } from 'lucide-react'
 
 export const AuthCallback: React.FC = () => {
@@ -27,7 +26,7 @@ export const AuthCallback: React.FC = () => {
         setTimeout(() => {
           window.location.href = '/'
         }, 2000)
-      } catch (error) {
+      } catch {
         setStatus('error')
         setMessage('An unexpected error occurred during verification')
       }

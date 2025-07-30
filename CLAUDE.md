@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-The Luminari Wilderness Editor is a full-stack monorepo application for creating and managing wilderness areas in the LuminariMUD game world. It consists of a React/TypeScript frontend and Express/TypeScript backend, with shared types and utilities.
+The Luminari Wilderness Editor is a full-stack monorepo application for creating and managing wilderness areas in the LuminariMUD game world. It consists of a React/TypeScript frontend and Express/TypeScript backend (TEMPORARY - will be replaced with Python), with shared types and utilities.
+
+**CRITICAL ARCHITECTURE NOTES**:
+- Express backend is TEMPORARY and will be replaced with Python FastAPI
+- Supabase is used for local development and temporary changes/saves
+- The CORE SYSTEM will directly modify LuminariMUD's existing MySQL spatial tables
+- Python backend will integrate directly with the game's MySQL database
 
 ## Common Development Commands
 
@@ -45,7 +51,7 @@ npm run clean
 This is a monorepo using npm workspaces and Turborepo for build orchestration:
 
 - **apps/frontend/**: React 18.3 + TypeScript 5.5 + Vite
-- **apps/backend/**: Express + TypeScript + Supabase integration
+- **apps/backend/**: Express + TypeScript + Supabase integration (TEMPORARY - Python FastAPI planned)
 - **packages/shared/**: Shared TypeScript types and utilities
 
 ### Technology Stack
@@ -59,8 +65,9 @@ This is a monorepo using npm workspaces and Turborepo for build orchestration:
 - **API Client**: Custom fetch-based client with error handling
 
 #### Backend (`apps/backend/`)
-- **Framework**: Express.js with TypeScript
-- **Database**: Supabase (PostgreSQL with PostGIS)
+- **Framework**: Express.js with TypeScript (TEMPORARY - will be Python FastAPI)
+- **Database**: Supabase (PostgreSQL with PostGIS) for development/local changes
+- **Production Database**: Direct integration with LuminariMUD's MySQL spatial tables
 - **Authentication**: Supabase JWT verification
 - **API**: RESTful endpoints with proper error handling
 - **Security**: Helmet, CORS, request validation
@@ -110,7 +117,8 @@ packages/shared/src/
 
 4. **State Management**: 
    - Frontend: React hooks with API integration
-   - Backend: Supabase database with Express controllers
+   - Backend: Supabase database with Express controllers (development)
+   - Production: Direct MySQL integration with LuminariMUD spatial tables
    - Real-time updates: Optimistic UI updates with API persistence
 
 5. **API Integration**: The frontend communicates with the backend via RESTful API:
@@ -119,7 +127,9 @@ packages/shared/src/
    - Error handling and loading states
    - Optimistic updates for better UX
 
-### Database Schema (Supabase)
+### Database Schema 
+
+**Development (Supabase PostgreSQL)**
 
 ```sql
 -- Regions table
@@ -157,6 +167,9 @@ create table points (
   updated_at timestamptz default now()
 );
 ```
+
+**Production (LuminariMUD MySQL Spatial Tables)**
+The core system will integrate directly with the existing LuminariMUD MySQL spatial database tables. This provides real-time integration with the game world, allowing changes made in the editor to immediately affect the game environment.
 
 ### API Endpoints
 
@@ -291,3 +304,30 @@ Production domain: `https://wildedit.luminarimud.com`
 - Use workspace-specific commands: `npm run dev --workspace=@wildeditor/frontend`
 - Shared types are automatically available in both frontend and backend
 - Changes to shared package require restart of dependent services
+
+## 📚 Documentation Reference
+
+For comprehensive information beyond this technical overview, refer to:
+
+### Essential Documentation
+- **[README.md](README.md)** - Project overview, quick start, and complete documentation map
+- **[SETUP.md](SETUP.md)** - Detailed setup instructions
+- **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Full development guide and best practices
+- **[docs/API.md](docs/API.md)** - Complete API reference and examples
+
+### Architecture & Planning
+- **[docs/WILDERNESS_PROJECT.md](docs/WILDERNESS_PROJECT.md)** - Detailed project specifications and milestones
+- **[docs/WILDERNESS_SYSTEM.md](docs/WILDERNESS_SYSTEM.md)** - LuminariMUD wilderness system architecture
+- **[docs/adr/](docs/adr/)** - Architecture Decision Records for major technical decisions
+
+### Migration & Operations
+- **[docs/MIGRATION.md](docs/MIGRATION.md)** - Express to Python FastAPI migration guide
+- **[docs/INTEGRATION.md](docs/INTEGRATION.md)** - LuminariMUD game server integration procedures
+- **[docs/TESTING.md](docs/TESTING.md)** - Testing strategy and implementation guide
+
+### Current Development Status
+- **[docs/TODO.md](docs/TODO.md)** - Active development tasks and known issues
+- **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Recent changes and version history
+- **[docs/AUDIT.md](docs/AUDIT.md)** - Code quality assessment and recommendations
+
+All documentation is kept up-to-date and reflects the current temporary Express backend → future Python FastAPI architecture.

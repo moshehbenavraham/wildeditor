@@ -31,6 +31,11 @@ export const getPath = async (req: Request, res: Response) => {
 export const createPath = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const pathData = req.body;
+    
+    // Basic validation
+    if (!pathData.name || !pathData.type || !pathData.coordinates || !Array.isArray(pathData.coordinates)) {
+      return res.status(400).json({ error: 'Missing required fields: name, type, coordinates' });
+    }
     const path = await PathModel.create(pathData);
     res.status(201).json({ data: path, message: 'Path created successfully' });
   } catch (error) {
@@ -43,6 +48,11 @@ export const updatePath = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    
+    // Basic validation
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No fields provided for update' });
+    }
     const path = await PathModel.update(id, updates);
     res.json({ data: path, message: 'Path updated successfully' });
   } catch (error) {

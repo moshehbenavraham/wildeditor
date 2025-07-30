@@ -12,7 +12,8 @@
       "Bash(node:*)",
       "Bash(curl:*)",
       "Bash(kill:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npx turbo run lint:*)"
     ],
     "deny": []
   }

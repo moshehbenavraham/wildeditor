@@ -154,7 +154,7 @@ export const useEditor = () => {
         currentDrawing: [...prev.currentDrawing, coordinate]
       }));
     }
-  }, [state.tool, points.length, selectItem]);
+  }, [state.tool, points.length, selectItem, session?.access_token]);
 
   const finishDrawing = useCallback(() => {
     if (state.currentDrawing.length >= 2) {
@@ -208,7 +208,7 @@ export const useEditor = () => {
       }
     }
     setState(prev => ({ ...prev, isDrawing: false, currentDrawing: [] }));
-  }, [state.currentDrawing, state.tool, regions.length, paths.length, selectItem]);
+  }, [state.currentDrawing, state.tool, regions.length, paths.length, selectItem, session?.access_token]);
 
   const updateSelectedItem = useCallback((updates: Partial<Region | Path | Point>) => {
     if (!state.selectedItem) return;
@@ -218,7 +218,7 @@ export const useEditor = () => {
     if ('coordinates' in state.selectedItem) {
       if ('vnum' in state.selectedItem && 'type' in state.selectedItem) {
         // It's a Region or Path
-        if (state.selectedItem.coordinates.length > 2) {
+        if (state.selectedItem.coordinates.length >= 3) {
           // It's a Region
           setRegions(prev => prev.map(region => 
             region.id === itemId

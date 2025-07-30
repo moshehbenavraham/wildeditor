@@ -4,7 +4,7 @@ This document describes the API endpoints and data structures used by the Lumina
 
 ## Current Implementation
 
-The backend is currently implemented using Express.js with TypeScript as a temporary solution. A Python FastAPI implementation is planned for the future.
+The backend is currently implemented using Express.js with TypeScript as a **TEMPORARY** solution. This will be replaced with Python FastAPI that integrates directly with LuminariMUD's existing MySQL spatial tables.
 
 ## Base URL
 
@@ -303,21 +303,24 @@ The API allows cross-origin requests from configured frontend URLs:
 
 ## Implementation Notes
 
-### Current Backend (Express/TypeScript)
+### Current Backend (Express/TypeScript) - TEMPORARY
 - Located in `apps/backend/`
-- Uses Supabase for database operations
+- Uses Supabase for local development and temporary changes
 - JWT validation via Supabase auth middleware
 - All endpoints return `ApiResponse<T>` wrapper
 
-### Future Backend (Python FastAPI)
+### Future Backend (Python FastAPI) - PRODUCTION
 - Will maintain identical API structure
 - Same endpoints and response formats
 - Drop-in replacement for Express backend
+- **Direct integration with LuminariMUD's existing MySQL spatial tables**
 - Enhanced spatial operations with GeoAlchemy2
 
 ## Database Schema
 
-The backend uses Supabase PostgreSQL with the following tables:
+### Development Schema (Supabase PostgreSQL)
+
+The current Express backend uses Supabase PostgreSQL for development with the following tables:
 
 ```sql
 -- Enable PostGIS for spatial operations
@@ -357,6 +360,15 @@ CREATE TABLE points (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+```
+
+### Production Schema (LuminariMUD MySQL)
+
+The Python FastAPI backend will integrate directly with LuminariMUD's existing MySQL spatial database tables, providing real-time integration with the game world.
+
+```sql
+-- Production tables are part of LuminariMUD's existing MySQL schema
+-- Direct integration allows immediate game world updates
 ```
 
 ## Testing the API

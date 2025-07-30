@@ -11,6 +11,7 @@
     "./types": "./src/types/index.ts"
   },
   "scripts": {
+    "lint": "echo 'No linting configured for shared package - types only'",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {

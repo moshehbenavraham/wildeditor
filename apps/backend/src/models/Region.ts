@@ -1,5 +1,5 @@
 import { supabase } from '../config/database';
-import { Region, RegionEntity, Coordinate } from '@wildeditor/shared/types';
+import { Region, RegionEntity } from '@wildeditor/shared/types';
 
 export class RegionModel {
   static async findAll(): Promise<RegionEntity[]> {

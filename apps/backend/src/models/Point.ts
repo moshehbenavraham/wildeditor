@@ -18,6 +18,11 @@ export class PointModel {
   }
 
   static async findById(id: string): Promise<PointEntity | null> {
+    if (!supabase) {
+      console.warn('Supabase not configured - returning null');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('points')
       .select('*')
@@ -32,6 +37,10 @@ export class PointModel {
   }
 
   static async create(point: Omit<Point, 'id'>): Promise<PointEntity> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot create point');
+    }
+
     const { data, error } = await supabase
       .from('points')
       .insert({
@@ -47,6 +56,10 @@ export class PointModel {
   }
 
   static async update(id: string, updates: Partial<Point>): Promise<PointEntity> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot update point');
+    }
+
     const { data, error } = await supabase
       .from('points')
       .update(updates)
@@ -59,6 +72,10 @@ export class PointModel {
   }
 
   static async delete(id: string): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase not configured - cannot delete point');
+    }
+
     const { error } = await supabase
       .from('points')
       .delete()

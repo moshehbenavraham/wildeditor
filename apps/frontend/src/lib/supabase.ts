@@ -18,4 +18,4 @@ export const supabase = (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'your
         detectSessionInUrl: true
       }
     })
-  : null as any
+  : null as unknown as ReturnType<typeof createClient>

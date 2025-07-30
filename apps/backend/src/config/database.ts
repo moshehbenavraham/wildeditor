@@ -17,4 +17,4 @@ export const supabase = (supabaseUrl && supabaseServiceKey && supabaseUrl !== 'y
         persistSession: false
       }
     })
-  : null as any;
+  : null as unknown as ReturnType<typeof createClient>;

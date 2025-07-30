@@ -70,13 +70,19 @@ The Luminari Wilderness Editor provides a modern web-based interface for managin
 - Coordinate validation and display
 - Real-time visual feedback
 
-**Python Backend API (Business Logic)**
-- MySQL spatial database operations
+**Python Backend API (Business Logic) - FUTURE**
+- Direct MySQL spatial database operations with LuminariMUD tables
 - Game logic validation
 - Coordinate transformations
 - Region/path spatial calculations
 - Data persistence and versioning
-- Integration with existing MUD systems
+- Real-time integration with existing MUD systems
+
+**Current Express Backend (TEMPORARY)**
+- Supabase PostgreSQL for development
+- Basic CRUD operations
+- JWT authentication
+- Will be replaced with Python FastAPI
 
 ### Architecture Benefits
 
@@ -89,9 +95,15 @@ The Luminari Wilderness Editor provides a modern web-based interface for managin
 ### Communication Flow
 
 ```
-React Editor → HTTP Request → Python API → MySQL Database
+CURRENT (Development):
+React Editor → HTTP Request → Express API → Supabase PostgreSQL
      ↑             ↓              ↓              ↓
      ←─── HTTP Response ←── Validation ←── Spatial Query
+
+FUTURE (Production):
+React Editor → HTTP Request → Python API → LuminariMUD MySQL
+     ↑             ↓              ↓              ↓
+     ←─── HTTP Response ←── Game Logic ←── Spatial Query
 ```
 
 ### Frontend Responsibilities

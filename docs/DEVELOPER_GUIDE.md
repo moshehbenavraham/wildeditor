@@ -9,12 +9,29 @@ This guide provides technical information for developers working on the Luminari
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │   Backend API   │    │   Database      │
-│   (React/TS)    │◄──►│   (FastAPI)     │◄──►│   (MySQL)       │
-│                 │    │                 │    │                 │
+│   (React/TS)    │◄──►│   (Express TS)  │◄──►│   (Supabase)    │
+│                 │    │   TEMPORARY     │    │   Development   │
 │ - Map Interface │    │ - Authentication│    │ - Spatial Data  │
 │ - Drawing Tools │    │ - CRUD Ops      │    │ - Region Tables │
 │ - State Mgmt    │    │ - Validation    │    │ - Path Tables   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │              PRODUCTION ARCHITECTURE:         │
+         │                       │                       │
+         └──────────────►┌─────────────────┐◄────────────┘
+                         │   Python API    │
+                         │   (FastAPI)     │
+                         │                 │
+                         │ - MySQL Direct │
+                         │ - Game Integration
+                         │ - Spatial Ops   │
+                         └─────────────────┘
+                                  │
+                         ┌─────────────────┐
+                         │ LuminariMUD     │
+                         │ MySQL Tables    │
+                         │ (Production)    │
+                         └─────────────────┘
 ```
 
 ### Technology Stack
@@ -33,39 +50,50 @@ This guide provides technical information for developers working on the Luminari
 - **PostCSS**: CSS processing with Tailwind
 - **Vite Dev Server**: Hot module replacement and fast builds
 
-## 📁 Project Structure
+## 📁 Project Structure (Monorepo)
 
 ```
 wildeditor/
-├── src/
-│   ├── components/              # React components
-│   │   ├── ui/                 # Reusable UI components
-│   │   ├── map/                # Map-related components
-│   │   ├── tools/              # Drawing tool components
-│   │   └── panels/             # Info and control panels
-│   ├── hooks/                  # Custom React hooks
-│   │   ├── useMap.ts          # Map state management
-│   │   ├── useAuth.ts         # Authentication logic
-│   │   └── useDrawing.ts      # Drawing tool logic
-│   ├── lib/                    # Utility libraries
-│   │   ├── api.ts             # API client functions
-│   │   ├── coordinates.ts     # Coordinate system utilities
-│   │   ├── geometry.ts        # Geometric calculations
-│   │   └── validation.ts      # Data validation functions
-│   ├── types/                  # TypeScript type definitions
-│   │   ├── api.ts             # API response types
-│   │   ├── map.ts             # Map-related types
-│   │   └── geometry.ts        # Geometric types
-│   ├── App.tsx                 # Main application component
-│   ├── main.tsx               # Application entry point
-│   └── index.css              # Global styles
-├── public/                     # Static assets
+├── apps/
+│   ├── frontend/               # React TypeScript frontend
+│   │   ├── src/
+│   │   │   ├── components/     # React components
+│   │   │   │   ├── AuthForm.tsx
+│   │   │   │   ├── MapCanvas.tsx
+│   │   │   │   ├── ToolPalette.tsx
+│   │   │   │   ├── PropertiesPanel.tsx
+│   │   │   │   └── StatusBar.tsx
+│   │   │   ├── hooks/          # Custom React hooks
+│   │   │   │   ├── useAuth.ts  # Authentication logic
+│   │   │   │   └── useEditor.ts # Editor state management
+│   │   │   ├── services/       # API client and external services
+│   │   │   │   └── api.ts      # API client functions
+│   │   │   ├── lib/            # Utility libraries
+│   │   │   │   └── supabase.ts # Supabase client
+│   │   │   ├── types/          # Type imports from shared
+│   │   │   │   └── index.ts    # Re-exports from @wildeditor/shared
+│   │   │   ├── App.tsx         # Main application component
+│   │   │   └── main.tsx        # Application entry point
+│   │   └── package.json        # Frontend dependencies
+│   └── backend/                # Express TypeScript API (TEMPORARY)
+│       ├── src/
+│       │   ├── controllers/    # Request handlers
+│       │   ├── routes/         # API route definitions
+│       │   ├── middleware/     # Auth & validation middleware
+│       │   ├── models/         # Database models
+│       │   ├── config/         # Configuration files
+│       │   └── index.ts        # Express server entry point
+│       └── package.json        # Backend dependencies
+├── packages/
+│   └── shared/                 # Shared TypeScript types
+│       ├── src/
+│       │   └── types/
+│       │       └── index.ts    # Shared interfaces
+│       └── package.json        # Shared package config
 ├── docs/                       # Documentation
-├── package.json               # Dependencies and scripts
-├── vite.config.ts            # Vite configuration
-├── tailwind.config.js        # Tailwind CSS configuration
-├── tsconfig.json             # TypeScript configuration
-└── eslint.config.js          # ESLint configuration
+├── package.json               # Root workspace configuration
+├── turbo.json                 # Turborepo configuration
+└── database-setup.sql         # Supabase schema (development)
 ```
 
 ## 🔧 Development Setup
@@ -95,13 +123,55 @@ wildeditor/
    # Edit .env with your settings
    ```
 
-3. **Start development server**
+3. **Start development servers** (both frontend and backend)
    ```bash
-   npm run dev
+   npm run dev  # Starts both frontend (:5173) and backend (:3001)
    ```
 
 4. **Open in browser**
    Navigate to `http://localhost:5173`
+
+### Monorepo Development Commands
+
+```bash
+# Start both frontend and backend
+npm run dev
+
+# Start individual services
+npm run dev:frontend  # Frontend only (:5173)
+npm run dev:backend   # Backend only (:3001)
+
+# Build all packages
+npm run build
+
+# Build individual packages
+npm run build:frontend
+npm run build:backend
+
+# Type checking across all packages
+npm run type-check
+
+# Linting across all packages
+npm run lint
+npm run lint:fix
+
+# Clean all build artifacts
+npm run clean
+```
+
+### Architecture Notes
+
+**Current Implementation (Development)**:
+- Express.js backend with TypeScript (TEMPORARY)
+- Supabase PostgreSQL for data persistence
+- Shared types package for consistency
+- JWT authentication via Supabase
+
+**Future Implementation (Production)**:
+- Python FastAPI backend
+- Direct MySQL integration with LuminariMUD
+- Same API contract and shared types
+- Enhanced spatial operations
 
 ### Build Process
 

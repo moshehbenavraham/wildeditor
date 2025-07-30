@@ -1,5 +1,7 @@
 -- Luminari Wilderness Editor Database Setup
--- Run this script in your Supabase SQL editor
+-- 
+-- DEVELOPMENT: Run this script in your Supabase SQL editor for local development
+-- PRODUCTION: Python backend will connect directly to LuminariMUD's existing MySQL spatial tables
 
 -- Enable PostGIS extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS postgis;

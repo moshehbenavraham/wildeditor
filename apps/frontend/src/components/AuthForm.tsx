@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { Mail, Lock, User, AlertCircle, MapPin } from 'lucide-react'
+import { Mail, Lock, AlertCircle, MapPin } from 'lucide-react'
 
 export const AuthForm: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -32,8 +32,8 @@ export const AuthForm: React.FC = () => {
           throw error
         }
       }
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An unknown error occurred')
     } finally {
       setLoading(false)
     }
@@ -52,8 +52,8 @@ export const AuthForm: React.FC = () => {
       const { error } = await resetPassword(email)
       if (error) throw error
       setMessage('Check your email for the password reset link!')
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An unknown error occurred')
     } finally {
       setLoading(false)
     }
