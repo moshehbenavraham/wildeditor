@@ -24,7 +24,9 @@
       "Bash(docker-compose:*)",
       "Bash(rm:*)",
       "Bash(gh run list:*)",
-      "WebFetch(domain:docs.netlify.com)"
+      "WebFetch(domain:docs.netlify.com)",
+      "Bash(git checkout:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": []
   }
