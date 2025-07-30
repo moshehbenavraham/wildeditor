@@ -102,7 +102,21 @@ export const useEditor = () => {
   }, [loadData]);
 
   const setTool = useCallback((tool: DrawingTool) => {
-    setState(prev => ({ ...prev, tool, isDrawing: false, currentDrawing: [] }));
+    setState(prev => {
+      // If we're currently drawing and switching tools, we need to clean up
+      if (prev.isDrawing && prev.tool !== tool) {
+        console.log('Switching tools during drawing - cleaning up drawing state');
+      }
+      
+      return { 
+        ...prev, 
+        tool, 
+        isDrawing: false, 
+        currentDrawing: [],
+        // Clear selection when switching to non-select tools
+        selectedItem: tool === 'select' ? prev.selectedItem : null
+      };
+    });
   }, []);
 
   const setZoom = useCallback((zoom: number) => {
@@ -126,6 +140,13 @@ export const useEditor = () => {
   }, []);
 
   const handleCanvasClick = useCallback((coordinate: Coordinate) => {
+    // Validate coordinate bounds
+    if (coordinate.x < -1024 || coordinate.x > 1024 || coordinate.y < -1024 || coordinate.y > 1024) {
+      console.warn('Coordinate out of bounds:', coordinate);
+      setError('Coordinate out of valid range (-1024 to 1024)');
+      return;
+    }
+
     if (state.tool === 'point') {
       const newPoint: Point = {
         id: Date.now().toString(),
@@ -156,59 +177,89 @@ export const useEditor = () => {
     }
   }, [state.tool, points.length, selectItem, session?.access_token]);
 
+  const cancelDrawing = useCallback(() => {
+    setState(prev => ({ ...prev, isDrawing: false, currentDrawing: [] }));
+    setError(null); // Clear any drawing-related errors
+  }, []);
+  
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   const finishDrawing = useCallback(() => {
-    if (state.currentDrawing.length >= 2) {
-      if (state.tool === 'polygon' && state.currentDrawing.length >= 3) {
-        const newRegion: Region = {
-          id: Date.now().toString(),
-          vnum: regions.length + 103,
-          name: `New Region ${regions.length + 1}`,
-          type: 'geographic',
-          coordinates: state.currentDrawing,
-          properties: 'Custom region',
-          color: '#F59E0B'
-        };
-        
-        // Optimistic update
-        setRegions(prev => [...prev, newRegion]);
-        selectItem(newRegion);
-        
-        // Save to API
-        if (session?.access_token) {
-          apiClient.createRegion(newRegion).catch(err => {
-            console.error('Failed to create region:', err);
-            // Revert optimistic update
-            setRegions(prev => prev.filter(r => r.id !== newRegion.id));
-            setError('Failed to create region');
-          });
-        }
-      } else if (state.tool === 'linestring') {
-        const newPath: Path = {
-          id: Date.now().toString(),
-          vnum: paths.length + 203,
-          name: `New Path ${paths.length + 1}`,
-          type: 'road',
-          coordinates: state.currentDrawing,
-          color: '#EC4899'
-        };
-        
-        // Optimistic update
-        setPaths(prev => [...prev, newPath]);
-        selectItem(newPath);
-        
-        // Save to API
-        if (session?.access_token) {
-          apiClient.createPath(newPath).catch(err => {
-            console.error('Failed to create path:', err);
-            // Revert optimistic update
-            setPaths(prev => prev.filter(p => p.id !== newPath.id));
-            setError('Failed to create path');
-          });
-        }
+    if (!state.isDrawing) {
+      console.warn('finishDrawing called but not currently drawing');
+      return;
+    }
+
+    // Validate minimum points for each shape type
+    const minPointsForTool = {
+      polygon: 3,
+      linestring: 2
+    };
+
+    const minPoints = minPointsForTool[state.tool as keyof typeof minPointsForTool];
+    
+    if (state.currentDrawing.length < minPoints) {
+      setError(`${state.tool === 'polygon' ? 'Polygon' : 'Path'} requires at least ${minPoints} points`);
+      return;
+    }
+
+    // Clear any previous errors
+    setError(null);
+
+    if (state.tool === 'polygon' && state.currentDrawing.length >= 3) {
+      const newRegion: Region = {
+        id: Date.now().toString(),
+        vnum: regions.length + 103,
+        name: `New Region ${regions.length + 1}`,
+        type: 'geographic',
+        coordinates: [...state.currentDrawing], // Create a copy to avoid reference issues
+        properties: 'Custom region',
+        color: '#F59E0B'
+      };
+      
+      // Optimistic update
+      setRegions(prev => [...prev, newRegion]);
+      selectItem(newRegion);
+      
+      // Save to API
+      if (session?.access_token) {
+        apiClient.createRegion(newRegion).catch(err => {
+          console.error('Failed to create region:', err);
+          // Revert optimistic update
+          setRegions(prev => prev.filter(r => r.id !== newRegion.id));
+          setError('Failed to create region');
+        });
+      }
+    } else if (state.tool === 'linestring' && state.currentDrawing.length >= 2) {
+      const newPath: Path = {
+        id: Date.now().toString(),
+        vnum: paths.length + 203,
+        name: `New Path ${paths.length + 1}`,
+        type: 'road',
+        coordinates: [...state.currentDrawing], // Create a copy to avoid reference issues
+        color: '#EC4899'
+      };
+      
+      // Optimistic update
+      setPaths(prev => [...prev, newPath]);
+      selectItem(newPath);
+      
+      // Save to API
+      if (session?.access_token) {
+        apiClient.createPath(newPath).catch(err => {
+          console.error('Failed to create path:', err);
+          // Revert optimistic update
+          setPaths(prev => prev.filter(p => p.id !== newPath.id));
+          setError('Failed to create path');
+        });
       }
     }
+    
+    // Always clean up drawing state after processing
     setState(prev => ({ ...prev, isDrawing: false, currentDrawing: [] }));
-  }, [state.currentDrawing, state.tool, regions.length, paths.length, selectItem, session?.access_token]);
+  }, [state.isDrawing, state.currentDrawing, state.tool, regions.length, paths.length, selectItem, session?.access_token]);
 
   const updateSelectedItem = useCallback((updates: Partial<Region | Path | Point>) => {
     if (!state.selectedItem) return;
@@ -290,6 +341,8 @@ export const useEditor = () => {
     selectItem,
     handleCanvasClick,
     finishDrawing,
+    cancelDrawing,
+    clearError,
     updateSelectedItem,
     loadData
   };

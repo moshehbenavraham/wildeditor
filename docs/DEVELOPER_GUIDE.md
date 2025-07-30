@@ -243,10 +243,119 @@ export const PolygonTool: React.FC<DrawingToolProps> = ({
 ```
 
 **Tool Types:**
-- **SelectTool**: Feature selection and editing
+- **SelectTool**: Feature selection and editing with precision algorithms
 - **PointTool**: Single-point landmark creation
-- **PolygonTool**: Multi-point region creation
-- **LinestringTool**: Linear path creation
+- **PolygonTool**: Multi-point region creation with validation
+- **LinestringTool**: Linear path creation with validation
+
+## 📊 Performance Optimizations
+
+### Canvas Rendering Improvements
+
+The drawing system has been significantly optimized for performance:
+
+```typescript
+// Memoized coordinate transformations
+const transformedRegions = useMemo(() => {
+  return regions.map(region => ({
+    ...region,
+    canvasCoords: region.coordinates.map(gameToCanvas)
+  }));
+}, [regions, gameToCanvas]);
+
+// Optimized drawing functions
+const drawRegionOptimized = useCallback((ctx, region) => {
+  // Uses pre-computed canvas coordinates
+  // Avoids coordinate transformation during render
+}, [state.selectedItem]);
+```
+
+**Key Optimizations:**
+- Pre-computed coordinate transformations with memoization
+- Selective re-rendering based on state changes
+- Canvas cleanup in useEffect hooks
+- Reduced computational overhead for complex drawings
+
+### Selection Algorithm Improvements
+
+#### Point-in-Polygon Algorithm
+```typescript
+const isPointInPolygon = useCallback((point: Coordinate, polygon: Coordinate[]): boolean => {
+  if (polygon.length < 3) return false;
+  
+  let isInside = false;
+  const x = point.x, y = point.y;
+  
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x, yi = polygon[i].y;
+    const xj = polygon[j].x, yj = polygon[j].y;
+    
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      isInside = !isInside;
+    }
+  }
+  
+  return isInside;
+}, []);
+```
+
+#### Distance-to-Line Algorithm
+```typescript
+const distanceToLineSegment = useCallback((point: Coordinate, lineStart: Coordinate, lineEnd: Coordinate): number => {
+  const A = point.x - lineStart.x;
+  const B = point.y - lineStart.y;
+  const C = lineEnd.x - lineStart.x;
+  const D = lineEnd.y - lineStart.y;
+
+  const dot = A * C + B * D;
+  const lenSq = C * C + D * D;
+  
+  if (lenSq === 0) return Math.sqrt(A * A + B * B);
+  
+  let param = Math.max(0, Math.min(1, dot / lenSq));
+  const xx = lineStart.x + param * C;
+  const yy = lineStart.y + param * D;
+  
+  return Math.sqrt((point.x - xx) ** 2 + (point.y - yy) ** 2);
+}, []);
+```
+
+## 🔍 Coordinate System Accuracy
+
+### Fixed Transformation Issues
+
+The coordinate system has been completely rewritten for accuracy:
+
+```typescript
+const canvasToGame = useCallback((clientX: number, clientY: number): Coordinate => {
+  const rect = canvasRef.current?.getBoundingClientRect();
+  const canvas = canvasRef.current;
+  if (!rect || !canvas) return { x: 0, y: 0 };
+  
+  // Account for zoom scaling
+  const scale = state.zoom / 100;
+  const canvasX = clientX - rect.left;
+  const canvasY = clientY - rect.top;
+  
+  // Convert to actual canvas coordinates with zoom consideration
+  const actualCanvasWidth = canvas.width / scale;
+  const actualCanvasHeight = canvas.height / scale;
+  
+  const normalizedX = Math.max(0, Math.min(1, canvasX / actualCanvasWidth));
+  const normalizedY = Math.max(0, Math.min(1, canvasY / actualCanvasHeight));
+  
+  return {
+    x: Math.round((normalizedX * 2048) - 1024),
+    y: Math.round(1024 - (normalizedY * 2048))
+  };
+}, [state.zoom]);
+```
+
+**Key Fixes:**
+- Proper zoom-aware coordinate conversion
+- Canvas scaling consideration
+- Bounds checking and clamping
+- Accurate mouse position tracking at all zoom levels
 
 ### State Management
 

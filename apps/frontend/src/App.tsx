@@ -6,6 +6,8 @@ import { ToolPalette } from './components/ToolPalette';
 import { LayerControls } from './components/LayerControls';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { StatusBar } from './components/StatusBar';
+import { ErrorNotification } from './components/ErrorNotification';
+import { LoadingOverlay } from './components/LoadingOverlay';
 import { useEditor } from './hooks/useEditor';
 import { useAuth } from './hooks/useAuth';
 import { User, Settings, LogOut } from 'lucide-react';
@@ -17,6 +19,8 @@ function App() {
     regions,
     paths,
     points,
+    loading,
+    error,
     setTool,
     setZoom,
     setMousePosition,
@@ -24,6 +28,8 @@ function App() {
     selectItem,
     handleCanvasClick,
     finishDrawing,
+    cancelDrawing,
+    clearError,
     updateSelectedItem
   } = useEditor();
 
@@ -46,7 +52,11 @@ function App() {
           setTool('linestring');
           break;
         case 'escape':
-          selectItem(null);
+          if (state.isDrawing) {
+            cancelDrawing();
+          } else {
+            selectItem(null);
+          }
           break;
         case 'enter':
           if (state.isDrawing) {
@@ -58,7 +68,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [setTool, selectItem, state.isDrawing, finishDrawing]);
+  }, [setTool, selectItem, cancelDrawing, state.isDrawing, finishDrawing]);
 
   // Handle auth callback route
   if (window.location.pathname === '/auth/callback') {
@@ -141,6 +151,12 @@ function App() {
           onZoomChange={setZoom}
         />
       </div>
+      
+      {/* Error notifications */}
+      <ErrorNotification error={error} onDismiss={clearError} />
+      
+      {/* Loading overlay */}
+      <LoadingOverlay isLoading={loading} message="Loading wilderness data..." />
     </ProtectedRoute>
   );
 }

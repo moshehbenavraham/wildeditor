@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Save, RotateCcw, Trash2, Plus } from 'lucide-react';
 import { Region, Path, Point } from '../types';
 
@@ -15,20 +15,52 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onFinishDrawing,
   isDrawing
 }) => {
+  const COORDINATE_BOUNDS = { min: -1024, max: 1024 };
+  
+  // Validation and sanitization functions
+  const validateCoordinate = useCallback((value: number): number => {
+    const num = Math.round(value);
+    return Math.max(COORDINATE_BOUNDS.min, Math.min(COORDINATE_BOUNDS.max, num));
+  }, [COORDINATE_BOUNDS.min, COORDINATE_BOUNDS.max]);
+  
+  const validateVnum = useCallback((value: number): number => {
+    return Math.max(1, Math.min(99999, Math.round(value)));
+  }, []);
+  
+  const sanitizeText = useCallback((text: string): string => {
+    return text.trim().slice(0, 100); // Limit length and trim whitespace
+  }, []);
   if (isDrawing) {
     return (
       <div className="p-4 bg-gray-900">
         <h3 className="text-lg font-semibold text-white mb-4">Drawing Mode</h3>
-        <p className="text-gray-300 mb-4">
-          Click on the map to add points. Right-click or double-click to finish.
-        </p>
-        <button
-          onClick={onFinishDrawing}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-        >
-          <Save size={16} />
-          Finish Drawing
-        </button>
+        <div className="bg-blue-900 border border-blue-700 rounded-lg p-3 mb-4">
+          <h4 className="text-blue-200 font-medium text-sm mb-2">Instructions</h4>
+          <ul className="text-blue-100 text-xs space-y-1">
+            <li>• Click on the map to add points</li>
+            <li>• Press <kbd className="bg-blue-800 px-1 rounded text-xs">Enter</kbd> to finish drawing</li>
+            <li>• Press <kbd className="bg-blue-800 px-1 rounded text-xs">Escape</kbd> to cancel</li>
+            <li>• Minimum points: Polygon (3), Path (2)</li>
+          </ul>
+        </div>
+        
+        <div className="space-y-2">
+          <button
+            onClick={onFinishDrawing}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+          >
+            <Save size={16} />
+            Finish Drawing
+          </button>
+          
+          <button
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))}
+            className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+          >
+            <RotateCcw size={16} />
+            Cancel Drawing
+          </button>
+        </div>
       </div>
     );
   }
@@ -63,8 +95,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <input
           type="text"
           value={selectedItem.name}
-          onChange={(e) => onUpdate({ name: e.target.value })}
+          onChange={(e) => onUpdate({ name: sanitizeText(e.target.value) })}
           className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          maxLength={100}
         />
       </div>
 
@@ -75,8 +108,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <input
             type="number"
             value={selectedItem.vnum}
-            onChange={(e) => onUpdate({ vnum: parseInt(e.target.value) || 0 })}
+            onChange={(e) => onUpdate({ vnum: validateVnum(parseInt(e.target.value) || 1) })}
             className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            min="1"
+            max="99999"
           />
         </div>
       )}
@@ -155,10 +190,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onChange={(e) => onUpdate({ 
                   coordinate: { 
                     ...(selectedItem as Point).coordinate, 
-                    x: parseInt(e.target.value) || 0 
+                    x: validateCoordinate(parseInt(e.target.value) || 0) 
                   } 
                 })}
                 className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:ring-1 focus:ring-blue-500"
+                min={COORDINATE_BOUNDS.min}
+                max={COORDINATE_BOUNDS.max}
               />
             </div>
             <div>
@@ -169,10 +206,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onChange={(e) => onUpdate({ 
                   coordinate: { 
                     ...(selectedItem as Point).coordinate, 
-                    y: parseInt(e.target.value) || 0 
+                    y: validateCoordinate(parseInt(e.target.value) || 0) 
                   } 
                 })}
                 className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:ring-1 focus:ring-blue-500"
+                min={COORDINATE_BOUNDS.min}
+                max={COORDINATE_BOUNDS.max}
               />
             </div>
           </div>
@@ -195,22 +234,26 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     value={coord.x}
                     onChange={(e) => {
                       const newCoords = [...(selectedItem as Region | Path).coordinates];
-                      newCoords[index] = { ...coord, x: parseInt(e.target.value) || 0 };
+                      newCoords[index] = { ...coord, x: validateCoordinate(parseInt(e.target.value) || 0) };
                       onUpdate({ coordinates: newCoords });
                     }}
                     className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-1 focus:ring-blue-500"
                     placeholder="X"
+                    min={COORDINATE_BOUNDS.min}
+                    max={COORDINATE_BOUNDS.max}
                   />
                   <input
                     type="number"
                     value={coord.y}
                     onChange={(e) => {
                       const newCoords = [...(selectedItem as Region | Path).coordinates];
-                      newCoords[index] = { ...coord, y: parseInt(e.target.value) || 0 };
+                      newCoords[index] = { ...coord, y: validateCoordinate(parseInt(e.target.value) || 0) };
                       onUpdate({ coordinates: newCoords });
                     }}
                     className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:ring-1 focus:ring-blue-500"
                     placeholder="Y"
+                    min={COORDINATE_BOUNDS.min}
+                    max={COORDINATE_BOUNDS.max}
                   />
                 </div>
                 <button className="text-red-400 hover:text-red-300 p-1">

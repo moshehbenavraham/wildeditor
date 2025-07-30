@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { Coordinate, Region, Path, Point, EditorState } from '../types';
 
 interface MapCanvasProps {
@@ -35,34 +35,37 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   }, []);
 
   // Convert canvas coordinates to game coordinates
-  const canvasToGame = useCallback((x: number, y: number): Coordinate => {
+  const canvasToGame = useCallback((clientX: number, clientY: number): Coordinate => {
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return { x: 0, y: 0 };
-    
-    // Get mouse position relative to canvas
-    const canvasX = x - rect.left;
-    const canvasY = y - rect.top;
-    
-    // Get actual canvas dimensions (which may be scaled by CSS)
     const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
+    if (!rect || !canvas) return { x: 0, y: 0 };
     
-    // Convert to canvas pixel coordinates
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    // Get mouse position relative to canvas element
+    const canvasX = clientX - rect.left;
+    const canvasY = clientY - rect.top;
     
-    const pixelX = canvasX * scaleX;
-    const pixelY = canvasY * scaleY;
+    // Account for zoom scaling - the canvas is scaled by zoom but maintains aspect ratio
+    const scale = state.zoom / 100;
     
-    // Convert to normalized coordinates (0-1) based on actual canvas size
-    const normalizedX = pixelX / canvas.width;
-    const normalizedY = pixelY / canvas.height;
+    // Convert CSS coordinates to actual canvas coordinates
+    // The canvas element may be scaled by CSS, so we need to account for that
+    const actualCanvasWidth = canvas.width / scale;
+    const actualCanvasHeight = canvas.height / scale;
     
+    // Normalize to 0-1 range based on the displayed (scaled) canvas size
+    const normalizedX = canvasX / actualCanvasWidth;
+    const normalizedY = canvasY / actualCanvasHeight;
+    
+    // Ensure we're within bounds
+    const clampedX = Math.max(0, Math.min(1, normalizedX));
+    const clampedY = Math.max(0, Math.min(1, normalizedY));
+    
+    // Convert to game coordinates (-1024 to +1024)
     return {
-      x: Math.round((normalizedX * (COORDINATE_RANGE * 2)) - COORDINATE_RANGE),
-      y: Math.round(COORDINATE_RANGE - (normalizedY * (COORDINATE_RANGE * 2)))
+      x: Math.round((clampedX * (COORDINATE_RANGE * 2)) - COORDINATE_RANGE),
+      y: Math.round(COORDINATE_RANGE - (clampedY * (COORDINATE_RANGE * 2)))
     };
-  }, []);
+  }, [state.zoom]);
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!state.showGrid) return;
@@ -94,26 +97,27 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     ctx.setLineDash([]);
   }, [state.showGrid, gameToCanvas]);
 
-  const drawRegion = useCallback((ctx: CanvasRenderingContext2D, region: Region) => {
-    if (!state.showRegions || region.coordinates.length < 3) return;
+  // Note: Removed old drawing functions as they're replaced by optimized versions
 
-    const canvasCoords = region.coordinates.map(gameToCanvas);
+  // Optimized drawing functions that use pre-transformed coordinates
+  const drawRegionOptimized = useCallback((ctx: CanvasRenderingContext2D, region: Region & { canvasCoords: {x: number, y:number}[] }) => {
+    if (!state.showRegions || region.canvasCoords.length < 3) return;
     
     ctx.fillStyle = region.color + '40';
     ctx.strokeStyle = region.color;
     ctx.lineWidth = state.selectedItem?.id === region.id ? 3 : 2;
 
     ctx.beginPath();
-    ctx.moveTo(canvasCoords[0].x, canvasCoords[0].y);
-    for (let i = 1; i < canvasCoords.length; i++) {
-      ctx.lineTo(canvasCoords[i].x, canvasCoords[i].y);
+    ctx.moveTo(region.canvasCoords[0].x, region.canvasCoords[0].y);
+    for (let i = 1; i < region.canvasCoords.length; i++) {
+      ctx.lineTo(region.canvasCoords[i].x, region.canvasCoords[i].y);
     }
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
     // Draw vertices
-    canvasCoords.forEach((coord, index) => {
+    region.canvasCoords.forEach((coord, index) => {
       ctx.fillStyle = region.color;
       ctx.beginPath();
       ctx.arc(coord.x, coord.y, 4, 0, Math.PI * 2);
@@ -125,12 +129,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       ctx.textAlign = 'center';
       ctx.fillText((index + 1).toString(), coord.x, coord.y - 8);
     });
-  }, [state.showRegions, state.selectedItem, gameToCanvas]);
-
-  const drawPath = useCallback((ctx: CanvasRenderingContext2D, path: Path) => {
-    if (!state.showPaths || path.coordinates.length < 2) return;
-
-    const canvasCoords = path.coordinates.map(gameToCanvas);
+  }, [state.showRegions, state.selectedItem]);
+  
+  const drawPathOptimized = useCallback((ctx: CanvasRenderingContext2D, path: Path & { canvasCoords: {x: number, y:number}[] }) => {
+    if (!state.showPaths || path.canvasCoords.length < 2) return;
     
     ctx.strokeStyle = path.color;
     ctx.lineWidth = state.selectedItem?.id === path.id ? 4 : 3;
@@ -138,14 +140,14 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     ctx.lineJoin = 'round';
 
     ctx.beginPath();
-    ctx.moveTo(canvasCoords[0].x, canvasCoords[0].y);
-    for (let i = 1; i < canvasCoords.length; i++) {
-      ctx.lineTo(canvasCoords[i].x, canvasCoords[i].y);
+    ctx.moveTo(path.canvasCoords[0].x, path.canvasCoords[0].y);
+    for (let i = 1; i < path.canvasCoords.length; i++) {
+      ctx.lineTo(path.canvasCoords[i].x, path.canvasCoords[i].y);
     }
     ctx.stroke();
 
     // Draw vertices
-    canvasCoords.forEach((coord, index) => {
+    path.canvasCoords.forEach((coord, index) => {
       ctx.fillStyle = path.color;
       ctx.beginPath();
       ctx.arc(coord.x, coord.y, 3, 0, Math.PI * 2);
@@ -157,18 +159,16 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       ctx.textAlign = 'center';
       ctx.fillText((index + 1).toString(), coord.x, coord.y - 6);
     });
-  }, [state.showPaths, state.selectedItem, gameToCanvas]);
-
-  const drawPoint = useCallback((ctx: CanvasRenderingContext2D, point: Point) => {
-    const canvasPos = gameToCanvas(point.coordinate);
-    
+  }, [state.showPaths, state.selectedItem]);
+  
+  const drawPointOptimized = useCallback((ctx: CanvasRenderingContext2D, point: Point & { canvasPos: {x: number, y:number} }) => {
     const color = point.type === 'landmark' ? '#F59E0B' : '#8B5CF6';
     ctx.fillStyle = color;
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = state.selectedItem?.id === point.id ? 3 : 2;
 
     ctx.beginPath();
-    ctx.arc(canvasPos.x, canvasPos.y, 6, 0, Math.PI * 2);
+    ctx.arc(point.canvasPos.x, point.canvasPos.y, 6, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
@@ -176,47 +176,127 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(point.name, canvasPos.x, canvasPos.y + 20);
-  }, [state.selectedItem, gameToCanvas]);
+    ctx.fillText(point.name, point.canvasPos.x, point.canvasPos.y + 20);
+  }, [state.selectedItem]);
 
   const drawCurrentDrawing = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!state.isDrawing || state.currentDrawing.length === 0) return;
 
     const canvasCoords = state.currentDrawing.map(gameToCanvas);
     
-    ctx.strokeStyle = '#FBBF24';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
+    // Determine if the current drawing is valid
+    const isValidDrawing = (
+      (state.tool === 'polygon' && canvasCoords.length >= 3) ||
+      (state.tool === 'linestring' && canvasCoords.length >= 2)
+    );
+    
+    // Use different colors based on validity
+    const strokeColor = isValidDrawing ? '#22C55E' : '#F59E0B';
+    const fillColor = isValidDrawing ? '#22C55E20' : '#F59E0B20';
+    
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 4]);
 
-    if (state.tool === 'polygon' && canvasCoords.length >= 3) {
-      ctx.fillStyle = '#FBBF24' + '20';
+    if (state.tool === 'polygon' && canvasCoords.length >= 2) {
+      ctx.fillStyle = fillColor;
       ctx.beginPath();
       ctx.moveTo(canvasCoords[0].x, canvasCoords[0].y);
       for (let i = 1; i < canvasCoords.length; i++) {
         ctx.lineTo(canvasCoords[i].x, canvasCoords[i].y);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    } else if (state.tool === 'linestring' && canvasCoords.length >= 2) {
-      ctx.beginPath();
-      ctx.moveTo(canvasCoords[0].x, canvasCoords[0].y);
-      for (let i = 1; i < canvasCoords.length; i++) {
-        ctx.lineTo(canvasCoords[i].x, canvasCoords[i].y);
+      
+      // Only close the path if we have 3+ points for a valid polygon
+      if (canvasCoords.length >= 3) {
+        ctx.closePath();
+        ctx.fill();
       }
       ctx.stroke();
+      
+      // Draw connection line back to first point if we have 2+ points
+      if (canvasCoords.length >= 2) {
+        ctx.setLineDash([2, 2]);
+        ctx.strokeStyle = strokeColor + '80';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(canvasCoords[canvasCoords.length - 1].x, canvasCoords[canvasCoords.length - 1].y);
+        ctx.lineTo(canvasCoords[0].x, canvasCoords[0].y);
+        ctx.stroke();
+      }
+    } else if (state.tool === 'linestring' && canvasCoords.length >= 1) {
+      if (canvasCoords.length >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(canvasCoords[0].x, canvasCoords[0].y);
+        for (let i = 1; i < canvasCoords.length; i++) {
+          ctx.lineTo(canvasCoords[i].x, canvasCoords[i].y);
+        }
+        ctx.stroke();
+      }
     }
 
-    // Draw vertices
-    canvasCoords.forEach(coord => {
-      ctx.fillStyle = '#FBBF24';
+    // Draw vertices with different styles based on validity
+    canvasCoords.forEach((coord, index) => {
+      ctx.fillStyle = strokeColor;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(coord.x, coord.y, 4, 0, Math.PI * 2);
+      ctx.arc(coord.x, coord.y, 5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
+      
+      // Draw vertex numbers
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText((index + 1).toString(), coord.x, coord.y - 12);
     });
+    
+    // Draw status text
+    if (canvasCoords.length > 0) {
+      const minPoints = state.tool === 'polygon' ? 3 : 2;
+      const statusText = isValidDrawing 
+        ? `${state.tool} (${canvasCoords.length} points) - Press Enter to finish` 
+        : `${state.tool} (${canvasCoords.length}/${minPoints} points) - Need ${minPoints - canvasCoords.length} more`;
+      
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(10, 10, 400, 30);
+      ctx.fillStyle = isValidDrawing ? '#22C55E' : '#F59E0B';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(statusText, 15, 30);
+    }
 
     ctx.setLineDash([]);
   }, [state.isDrawing, state.currentDrawing, state.tool, gameToCanvas]);
+
+  // Memoize expensive calculations
+  const canvasScale = useMemo(() => state.zoom / 100, [state.zoom]);
+  const canvasSize = useMemo(() => ({ 
+    width: MAP_SIZE * canvasScale, 
+    height: MAP_SIZE * canvasScale 
+  }), [canvasScale]);
+  
+  // Memoize coordinate transformations for all objects to avoid recalculating every render
+  const transformedRegions = useMemo(() => {
+    return regions.map(region => ({
+      ...region,
+      canvasCoords: region.coordinates.map(gameToCanvas)
+    }));
+  }, [regions, gameToCanvas]);
+  
+  const transformedPaths = useMemo(() => {
+    return paths.map(path => ({
+      ...path,
+      canvasCoords: path.coordinates.map(gameToCanvas)
+    }));
+  }, [paths, gameToCanvas]);
+  
+  const transformedPoints = useMemo(() => {
+    return points.map(point => ({
+      ...point,
+      canvasPos: gameToCanvas(point.coordinate)
+    }));
+  }, [points, gameToCanvas]);
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -224,18 +304,22 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    const scale = state.zoom / 100;
-    canvas.width = MAP_SIZE * scale;
-    canvas.height = MAP_SIZE * scale;
+    
+    // Set canvas internal resolution based on zoom
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
+    
+    // Set canvas display size (this affects the CSS size and canvasToGame calculations)
+    canvas.style.width = `${MAP_SIZE}px`;
+    canvas.style.height = `${MAP_SIZE}px`;
 
     // Clear canvas
     ctx.fillStyle = '#1F2937';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Scale the context for zoom
+    // Scale the context for zoom - this scales all drawing operations
     ctx.save();
-    ctx.scale(scale, scale);
+    ctx.scale(canvasScale, canvasScale);
 
     // Draw grid
     drawGrid(ctx);
@@ -265,23 +349,36 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     ctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw regions
-    regions.forEach(region => drawRegion(ctx, region));
+    // Draw regions using pre-transformed coordinates
+    transformedRegions.forEach(region => drawRegionOptimized(ctx, region));
 
-    // Draw paths
-    paths.forEach(path => drawPath(ctx, path));
+    // Draw paths using pre-transformed coordinates
+    transformedPaths.forEach(path => drawPathOptimized(ctx, path));
 
-    // Draw points
-    points.forEach(point => drawPoint(ctx, point));
+    // Draw points using pre-transformed coordinates
+    transformedPoints.forEach(point => drawPointOptimized(ctx, point));
 
     // Draw current drawing
     drawCurrentDrawing(ctx);
 
     ctx.restore();
-  }, [state, regions, paths, points, drawGrid, drawRegion, drawPath, drawPoint, drawCurrentDrawing, gameToCanvas]);
+  }, [canvasSize, canvasScale, drawGrid, drawCurrentDrawing, transformedRegions, transformedPaths, transformedPoints, gameToCanvas, drawRegionOptimized, drawPathOptimized, drawPointOptimized]);
 
   useEffect(() => {
     render();
+    
+    // Store canvas ref for cleanup
+    const canvas = canvasRef.current;
+    
+    // Cleanup function to handle component unmount
+    return () => {
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+    };
   }, [render]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -289,18 +386,92 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     onMouseMove(gameCoord);
   }, [canvasToGame, onMouseMove]);
 
+  // Geometric utility functions for accurate selection
+  const isPointInPolygon = useCallback((point: Coordinate, polygon: Coordinate[]): boolean => {
+    if (polygon.length < 3) return false;
+    
+    let isInside = false;
+    const x = point.x;
+    const y = point.y;
+    
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i].x;
+      const yi = polygon[i].y;
+      const xj = polygon[j].x;
+      const yj = polygon[j].y;
+      
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+        isInside = !isInside;
+      }
+    }
+    
+    return isInside;
+  }, []);
+
+  const distanceToLineSegment = useCallback((point: Coordinate, lineStart: Coordinate, lineEnd: Coordinate): number => {
+    const A = point.x - lineStart.x;
+    const B = point.y - lineStart.y;
+    const C = lineEnd.x - lineStart.x;
+    const D = lineEnd.y - lineStart.y;
+
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    
+    if (lenSq === 0) return Math.sqrt(A * A + B * B);
+    
+    let param = dot / lenSq;
+    param = Math.max(0, Math.min(1, param));
+    
+    const xx = lineStart.x + param * C;
+    const yy = lineStart.y + param * D;
+    
+    const dx = point.x - xx;
+    const dy = point.y - yy;
+    
+    return Math.sqrt(dx * dx + dy * dy);
+  }, []);
+
+  const distanceToPath = useCallback((point: Coordinate, path: Coordinate[]): number => {
+    if (path.length < 2) return Infinity;
+    
+    let minDistance = Infinity;
+    for (let i = 0; i < path.length - 1; i++) {
+      const distance = distanceToLineSegment(point, path[i], path[i + 1]);
+      minDistance = Math.min(minDistance, distance);
+    }
+    
+    return minDistance;
+  }, [distanceToLineSegment]);
+
   const handleClick = useCallback((e: React.MouseEvent) => {
     const gameCoord = canvasToGame(e.clientX, e.clientY);
     
     if (state.tool === 'select') {
-      // Check for point selection
+      const POINT_SELECTION_RADIUS = 10; // pixels
+      const PATH_SELECTION_TOLERANCE = 8; // game units
+      
+      // Check for point selection first (highest priority)
       const clickedPoint = points.find(point => {
         const canvasPos = gameToCanvas(point.coordinate);
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (!rect) return false;
+        
+        const canvasClickX = e.clientX - rect.left;
+        const canvasClickY = e.clientY - rect.top;
+        
+        // Account for canvas scaling
+        const scale = state.zoom / 100;
+        const scaledCanvasPos = {
+          x: canvasPos.x * scale,
+          y: canvasPos.y * scale
+        };
+        
         const distance = Math.sqrt(
-          Math.pow(e.clientX - (canvasPos.x + canvasRef.current!.getBoundingClientRect().left), 2) +
-          Math.pow(e.clientY - (canvasPos.y + canvasRef.current!.getBoundingClientRect().top), 2)
+          Math.pow(canvasClickX - scaledCanvasPos.x, 2) +
+          Math.pow(canvasClickY - scaledCanvasPos.y, 2)
         );
-        return distance <= 10;
+        
+        return distance <= POINT_SELECTION_RADIUS;
       });
 
       if (clickedPoint) {
@@ -308,12 +479,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         return;
       }
 
-      // Check for region/path selection (simplified)
+      // Check for region selection using proper point-in-polygon
       const clickedRegion = regions.find(region => {
-        // Simple point-in-polygon test (for demo purposes)
-        return region.coordinates.some(coord => 
-          Math.abs(coord.x - gameCoord.x) < 20 && Math.abs(coord.y - gameCoord.y) < 20
-        );
+        if (region.coordinates.length < 3) return false;
+        return isPointInPolygon(gameCoord, region.coordinates);
       });
 
       if (clickedRegion) {
@@ -321,10 +490,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         return;
       }
 
+      // Check for path selection using distance to line segments
       const clickedPath = paths.find(path => {
-        return path.coordinates.some(coord => 
-          Math.abs(coord.x - gameCoord.x) < 15 && Math.abs(coord.y - gameCoord.y) < 15
-        );
+        if (path.coordinates.length < 2) return false;
+        const distance = distanceToPath(gameCoord, path.coordinates);
+        return distance <= PATH_SELECTION_TOLERANCE;
       });
 
       if (clickedPath) {
@@ -332,11 +502,12 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         return;
       }
 
+      // No selection found
       onSelectItem(null);
     } else {
       onClick(gameCoord);
     }
-  }, [state.tool, points, regions, paths, canvasToGame, gameToCanvas, onClick, onSelectItem]);
+  }, [state.tool, state.zoom, points, regions, paths, canvasToGame, gameToCanvas, onClick, onSelectItem, isPointInPolygon, distanceToPath]);
 
   return (
     <div ref={containerRef} className="flex-1 overflow-auto bg-gray-800">
