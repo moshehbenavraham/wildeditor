@@ -1,13 +1,15 @@
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.dialects.mysql import POLYGON
 from ..config.config_database import Base
 
 class Region(Base):
     __tablename__ = "region_data"
     
-    id = Column(Integer, primary_key=True, index=True)
-    vnum = Column(Integer, unique=True, nullable=False)
-    name = Column(String(255), nullable=False)
-    type = Column(String(50), nullable=False)
-    coordinates = Column(JSON, nullable=False)
-    properties = Column(String(1000))
-    color = Column(String(7))  # Hex color code
+    vnum = Column(Integer, primary_key=True)  # Primary key, not auto-increment
+    zone_vnum = Column(Integer, nullable=False)
+    name = Column(String(50), nullable=True)
+    region_type = Column(Integer, nullable=False)  # 1=Geographic, 2=Encounter, 3=Sector Transform, 4=Sector Override
+    region_polygon = Column(POLYGON, nullable=True)  # MySQL spatial polygon type
+    region_props = Column(Integer, nullable=True)  # Usage depends on region_type
+    region_reset_data = Column(String(255), nullable=False)
+    region_reset_time = Column(DateTime, nullable=False)

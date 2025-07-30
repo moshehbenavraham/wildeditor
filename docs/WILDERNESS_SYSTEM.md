@@ -502,9 +502,9 @@ struct region_data {
 ```
 
 **Region Types:**
-- `REGION_GEOGRAPHIC` (1) - Named areas (forests, mountains)
+- `REGION_GEOGRAPHIC` (1) - Named geographic areas and landmarks that provide contextual information for the dynamic description engine without modifying terrain. Used for naming existing terrain areas on the base wilderness map, defining geo-political boundaries, and creating notable landmarks
 - `REGION_ENCOUNTER` (2) - Special encounter zones
-- `REGION_SECTOR_TRANSFORM` (3) - Changes terrain type
+- `REGION_SECTOR_TRANSFORM` (3) - Changes terrain type  
 - `REGION_SECTOR` (4) - Overrides sector completely
 
 **Region Position Constants:**

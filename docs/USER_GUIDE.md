@@ -121,7 +121,7 @@ The editor consists of three main areas:
 
 1. **Select the Polygon Tool** from the tool panel
 2. **Choose region type** from the dropdown:
-   - **Geographic**: Named areas (forests, mountains)
+   - **Geographic**: Named areas and landmarks that enhance descriptions without changing terrain (forests, political boundaries, notable locations)
    - **Encounter**: Special encounter zones
    - **Sector Transform**: Modify existing terrain
    - **Sector**: Override terrain completely
@@ -366,6 +366,7 @@ If you encounter issues:
 
 ### Naming Conventions
 - **Use descriptive names**: "Darkwood Forest" not "Forest1"
+- **Geographic regions**: Consider if it's area naming ("Iron Hills"), geo-political ("Merchant Quarter"), or landmark ("North Gate")
 - **Be consistent**: Follow existing naming patterns
 - **Include zone info**: Helpful for organization
 - **Avoid special characters**: Stick to letters, numbers, spaces

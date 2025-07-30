@@ -4,3 +4,4 @@ sqlalchemy
 pymysql
 pydantic
 python-dotenv
+cryptography  # Required for pymysql with some MySQL versions

@@ -1,0 +1,252 @@
+{
+  "system": "LuminariMUD Wilderness Regions",
+  "version": "1.0",
+  "description": "Complete context for the wilderness region system in LuminariMUD",
+  "overview": {
+    "purpose": "Regions are polygonal areas in the wilderness that modify terrain properties, provide naming, spawn encounters, or override default terrain calculations",
+    "storage": "MySQL database with spatial geometry support",
+    "integration": "Integrates with procedural terrain generation, weather system, and room description engine"
+  },
+  "region_types": {
+    "REGION_GEOGRAPHIC": {
+      "value": 1,
+      "description": "Named geographic areas (forests, mountains, etc.)",
+      "region_props_usage": "Not used - value ignored",
+      "behavior": "Provides descriptive names to wilderness areas without modifying terrain",
+      "examples": ["Whispering Wood", "Iron Hills", "Misty Mountains"]
+    },
+    "REGION_ENCOUNTER": {
+      "value": 2,
+      "description": "Special encounter zones where specific encounters can spawn",
+      "region_props_usage": "Not used - value ignored", 
+      "behavior": "Enables encounter spawning with optional reset timers",
+      "examples": ["Dragon Lair Territory", "Bandit Ambush Zone", "Monster Hunting Grounds"]
+    },
+    "REGION_SECTOR_TRANSFORM": {
+      "value": 3,
+      "description": "Terrain modification regions that adjust elevation values",
+      "region_props_usage": "Elevation adjustment value (positive or negative integer)",
+      "behavior": "Adds region_props value to existing elevation, then recalculates sector type using modified elevation",
+      "examples": ["Magical uplift zone (+50)", "Cursed depression (-30)", "Earthquake damage zone (-20)"]
+    },
+    "REGION_SECTOR": {
+      "value": 4,
+      "description": "Complete terrain override regions",
+      "region_props_usage": "Sector type ID (0-36) from sector_types array",
+      "behavior": "Completely replaces calculated terrain type with specified sector",
+      "examples": ["Road through forest (sector 11)", "Lake in desert (sector 6)", "City district (sector 1)"]
+    }
+  },
+  "sector_types": {
+    "description": "Valid values for region_props when region_type = REGION_SECTOR (4)",
+    "values": {
+      "0": "Inside",
+      "1": "City", 
+      "2": "Field",
+      "3": "Forest",
+      "4": "Hills",
+      "5": "Low Mountains",
+      "6": "Water (Swim)",
+      "7": "Water (No Swim)",
+      "8": "In Flight",
+      "9": "Underwater",
+      "10": "Zone Entrance",
+      "11": "Road North-South",
+      "12": "Road East-West", 
+      "13": "Road Intersection",
+      "14": "Desert",
+      "15": "Ocean",
+      "16": "Marshland",
+      "17": "High Mountains",
+      "18": "Outer Planes",
+      "19": "Underdark - Wild",
+      "20": "Underdark - City",
+      "21": "Underdark - Inside",
+      "22": "Underdark - Water (Swim)",
+      "23": "Underdark - Water (No Swim)",
+      "24": "Underdark - In Flight",
+      "25": "Lava",
+      "26": "Dirt Road North-South",
+      "27": "Dirt Road East-West",
+      "28": "Dirt Road Intersection",
+      "29": "Cave",
+      "30": "Jungle",
+      "31": "Tundra",
+      "32": "Taiga",
+      "33": "Beach",
+      "34": "Sea Port",
+      "35": "Inside Room",
+      "36": "River"
+    }
+  },
+  "data_structures": {
+    "c_struct": {
+      "name": "struct region_data",
+      "fields": {
+        "vnum": "region_vnum - Unique identifier for the region",
+        "rnum": "region_rnum - Array index for this region in region_table",
+        "zone": "zone_rnum - Zone that contains this region",
+        "name": "char* - Name of the region (e.g., 'Whispering Wood')",
+        "region_type": "int - Type of region (1-4, see region_types above)",
+        "region_props": "int - Properties/effects based on region_type",
+        "vertices": "struct vertex* - Polygon boundary points",
+        "num_vertices": "int - Number of vertices in the polygon",
+        "events": "struct list_data* - Used for region events (encounters)"
+      }
+    },
+    "vertex_struct": {
+      "name": "struct vertex", 
+      "fields": {
+        "x": "int - X coordinate",
+        "y": "int - Y coordinate"
+      }
+    }
+  },
+  "database_schema": {
+    "primary_table": {
+      "name": "region_data",
+      "description": "Main table storing region definitions",
+      "sql": "CREATE TABLE region_data (\n    vnum INT PRIMARY KEY,\n    zone_vnum INT,\n    name VARCHAR(255),\n    region_type INT,\n    region_polygon GEOMETRY,\n    region_props INT,\n    region_reset_data TEXT,\n    region_reset_time INT,\n    SPATIAL INDEX(region_polygon)\n);",
+      "fields": {
+        "vnum": "Unique region identifier",
+        "zone_vnum": "Zone this region belongs to",
+        "name": "Human-readable region name",
+        "region_type": "Type constant (1-4)",
+        "region_polygon": "MySQL GEOMETRY field storing polygon boundary",
+        "region_props": "Properties value (usage depends on region_type)",
+        "region_reset_data": "Serialized data for encounter resets",
+        "region_reset_time": "Reset timer in seconds for encounters"
+      }
+    },
+    "index_table": {
+      "name": "region_index", 
+      "description": "Optimized spatial index table for faster queries",
+      "sql": "CREATE TABLE region_index (\n    vnum INT PRIMARY KEY,\n    zone_vnum INT,\n    region_polygon GEOMETRY,\n    SPATIAL INDEX(region_polygon),\n    FOREIGN KEY (vnum) REFERENCES region_data(vnum)\n);",
+      "purpose": "Performance optimization for spatial queries"
+    }
+  },
+  "coordinate_system": {
+    "description": "2D coordinate system for wilderness positioning",
+    "range": {
+      "x": "-1024 to +1024",
+      "y": "-1024 to +1024"
+    },
+    "origin": "(0,0) at map center",
+    "directions": {
+      "north": "+Y",
+      "south": "-Y", 
+      "east": "+X",
+      "west": "-X"
+    }
+  },
+  "spatial_queries": {
+    "point_in_polygon": {
+      "description": "Check if coordinates are within a region",
+      "sql": "SELECT vnum FROM region_index WHERE ST_Within(GeomFromText('POINT(x y)'), region_polygon)"
+    },
+    "region_position": {
+      "description": "Determine position relative to region (center, inside, edge)",
+      "sql": "SELECT vnum,\n  CASE\n    WHEN ST_Within(GeomFromText('POINT(x y)'), region_polygon) THEN\n    CASE\n      WHEN (GeomFromText('POINT(x y)') = Centroid(region_polygon)) THEN '1'\n      WHEN (ST_Distance(GeomFromText('POINT(x y)'), ExteriorRing(region_polygon)) >\n            ST_Distance(GeomFromText('POINT(x y)'), Centroid(region_polygon))/2) THEN '2'\n      ELSE '3'\n    END\n    ELSE NULL\n  END as position\nFROM region_index\nWHERE ST_Within(GeomFromText('POINT(x y)'), region_polygon)",
+      "position_codes": {
+        "1": "REGION_POS_CENTER - At region center",
+        "2": "REGION_POS_INSIDE - Inside region boundary", 
+        "3": "REGION_POS_EDGE - At region edge"
+      }
+    },
+    "nearby_regions": {
+      "description": "Find regions within specified distance",
+      "purpose": "Used for regional descriptions and navigation"
+    }
+  },
+  "processing_flow": {
+    "terrain_generation": [
+      "Calculate base terrain using Perlin noise (elevation, moisture, temperature)",
+      "Get enclosing regions for coordinate using spatial query",
+      "Process regions in priority order",
+      "Apply region effects based on region_type",
+      "Return final sector type"
+    ],
+    "region_effects": {
+      "REGION_GEOGRAPHIC": "No terrain modification, used for naming only",
+      "REGION_ENCOUNTER": "No terrain modification, enables encounter spawning",
+      "REGION_SECTOR_TRANSFORM": "elevation += region_props; recalculate sector",
+      "REGION_SECTOR": "sector_type = region_props; override completely"
+    }
+  },
+  "key_functions": {
+    "load_regions": {
+      "file": "mysql.c",
+      "description": "Loads all regions from database into region_table array",
+      "sql_query": "SELECT vnum, zone_vnum, name, region_type, NumPoints(ExteriorRing(region_polygon)), AsText(ExteriorRing(region_polygon)), region_props, region_reset_data, region_reset_time FROM region_data"
+    },
+    "get_enclosing_regions": {
+      "file": "mysql.c",
+      "description": "Returns list of regions containing a specific coordinate",
+      "returns": "struct region_list* - Linked list of containing regions"
+    },
+    "get_nearby_regions": {
+      "file": "mysql.c", 
+      "description": "Returns regions within specified distance for descriptions",
+      "returns": "struct region_proximity_list* - Regions with distance/direction data"
+    },
+    "get_modified_sector_type": {
+      "file": "wilderness.c",
+      "description": "Applies region effects to calculate final terrain type"
+    }
+  },
+  "integration_points": {
+    "terrain_generation": "wilderness.c - get_modified_sector_type(), get_map()",
+    "room_assignment": "wilderness.c - assign_wilderness_room()",
+    "descriptions": "desc_engine.c - Dynamic room naming based on regions",
+    "encounters": "Event system for encounter region resets",
+    "builder_tools": "oasis_list.c - reglist command for region management"
+  },
+  "constants": {
+    "files": ["wilderness.h", "structs.h"],
+    "defines": {
+      "REGION_GEOGRAPHIC": 1,
+      "REGION_ENCOUNTER": 2, 
+      "REGION_SECTOR_TRANSFORM": 3,
+      "REGION_SECTOR": 4,
+      "REGION_POS_UNDEFINED": 0,
+      "REGION_POS_CENTER": 1,
+      "REGION_POS_INSIDE": 2,
+      "REGION_POS_EDGE": 3
+    }
+  },
+  "example_usage": {
+    "create_forest_region": {
+      "description": "Create a named forest region for atmospheric naming",
+      "sql": "INSERT INTO region_data (vnum, zone_vnum, name, region_type, region_polygon, region_props) VALUES (1001, 100, 'Whispering Wood', 1, GeomFromText('POLYGON((10 10, 50 10, 50 50, 10 50, 10 10))'), 0)"
+    },
+    "create_road_override": {
+      "description": "Create a road that overrides forest terrain",
+      "sql": "INSERT INTO region_data (vnum, zone_vnum, name, region_type, region_polygon, region_props) VALUES (1002, 100, 'Forest Road', 4, GeomFromText('POLYGON((20 20, 25 20, 25 40, 20 40, 20 20))'), 11)",
+      "explanation": "region_props = 11 (Road North-South sector type)"
+    },
+    "create_elevation_modifier": {
+      "description": "Create a magical uplift that raises terrain",
+      "sql": "INSERT INTO region_data (vnum, zone_vnum, name, region_type, region_polygon, region_props) VALUES (1003, 100, 'Magical Uplift', 3, GeomFromText('POLYGON((30 30, 40 30, 40 40, 30 40, 30 30))'), 50)",
+      "explanation": "region_props = 50 (adds 50 to elevation, potentially changing plains to hills)"
+    }
+  },
+  "common_patterns": {
+    "layered_regions": "Multiple regions can overlap - processed in database result order",
+    "priority_system": "Later processed regions override earlier ones",
+    "geometric_precision": "Uses MySQL spatial functions for accurate polygon containment",
+    "performance_optimization": "Separate index tables for high-speed spatial queries"
+  },
+  "troubleshooting": {
+    "region_not_applying": [
+      "Check polygon geometry is valid and closed",
+      "Verify coordinates are within wilderness bounds (-1024 to +1024)",
+      "Ensure region_type is valid (1-4)",
+      "Check spatial index is populated"
+    ],
+    "sector_override_issues": [
+      "Verify region_props value is valid sector type (0-36)",
+      "Check region_type is REGION_SECTOR (4)",
+      "Ensure no other regions override this one"
+    ]
+  }
+}

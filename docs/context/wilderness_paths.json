@@ -1,0 +1,334 @@
+{
+  "system": "LuminariMUD Wilderness Paths",
+  "version": "1.0", 
+  "description": "Complete context for the wilderness path system in LuminariMUD",
+  "overview": {
+    "purpose": "Paths are linear features in the wilderness like roads, rivers, and streams that override terrain and provide navigation routes",
+    "storage": "MySQL database with spatial linestring geometry support",
+    "integration": "Integrates with terrain generation, mapping system, and navigation features",
+    "rendering": "Uses specialized glyphs for different path orientations and intersections"
+  },
+  "path_types": {
+    "PATH_ROAD": {
+      "value": 1,
+      "description": "Paved roads that provide fast travel routes",
+      "path_props_usage": "Sector type to convert path tiles to (typically road sectors)",
+      "common_sectors": [11, 12, 13],
+      "examples": ["King's Highway", "Trade Route", "Military Road"]
+    },
+    "PATH_DIRT_ROAD": {
+      "value": 2,
+      "description": "Unpaved dirt roads for rural areas",
+      "path_props_usage": "Sector type to convert path tiles to (typically dirt road sectors)", 
+      "common_sectors": [26, 27, 28],
+      "examples": ["Village Path", "Farm Road", "Logging Trail"]
+    },
+    "PATH_GEOGRAPHIC": {
+      "value": 3,
+      "description": "Geographic linear features",
+      "path_props_usage": "Sector type for geographic features",
+      "examples": ["Mountain Ridge", "Valley Floor", "Cliff Edge"]
+    },
+    "PATH_RIVER": {
+      "value": 5,
+      "description": "Rivers and major waterways",
+      "path_props_usage": "Water sector type (typically 6 for swimmable, 7 for deep water)",
+      "common_sectors": [6, 7, 36],
+      "examples": ["Great River", "Rapids", "Mighty Current"]
+    },
+    "PATH_STREAM": {
+      "value": 6,
+      "description": "Small streams and creeks",
+      "path_props_usage": "Water sector type (typically shallow water)",
+      "common_sectors": [6, 36],
+      "examples": ["Mountain Stream", "Creek", "Brook"]
+    }
+  },
+  "sector_mapping": {
+    "description": "Common sector types used with paths",
+    "road_sectors": {
+      "11": "Road North-South",
+      "12": "Road East-West", 
+      "13": "Road Intersection",
+      "26": "Dirt Road North-South",
+      "27": "Dirt Road East-West",
+      "28": "Dirt Road Intersection"
+    },
+    "water_sectors": {
+      "6": "Water (Swim)",
+      "7": "Water (No Swim)",
+      "36": "River"
+    }
+  },
+  "glyph_system": {
+    "description": "Visual representation system for paths on wilderness maps",
+    "glyph_types": {
+      "GLYPH_TYPE_NONE": {
+        "value": -1,
+        "description": "No glyph"
+      },
+      "GLYPH_TYPE_PATH_NS": {
+        "value": 0,
+        "description": "North-South oriented path glyph",
+        "usage": "Vertical paths, rivers flowing north-south"
+      },
+      "GLYPH_TYPE_PATH_EW": {
+        "value": 1, 
+        "description": "East-West oriented path glyph",
+        "usage": "Horizontal paths, rivers flowing east-west"
+      },
+      "GLYPH_TYPE_PATH_INT": {
+        "value": 2,
+        "description": "Intersection/junction glyph",
+        "usage": "Where paths cross or meet"
+      }
+    },
+    "glyph_storage": "Array of 3 strings in path_data.glyphs[3] for each orientation"
+  },
+  "data_structures": {
+    "c_struct": {
+      "name": "struct path_data",
+      "fields": {
+        "vnum": "region_vnum - Unique identifier for the path",
+        "rnum": "region_rnum - Array index for this path in path_table", 
+        "zone": "zone_rnum - Zone that contains this path",
+        "name": "char* - Name of the path (e.g., 'King's Highway')",
+        "path_type": "int - Type of path (1,2,3,5,6 - see path_types above)",
+        "path_props": "int - Sector type to apply along the path",
+        "glyphs": "char*[3] - Display glyphs for NS, EW, and intersection orientations",
+        "vertices": "struct vertex* - Linestring points defining the path",
+        "num_vertices": "int - Number of vertices in the linestring"
+      }
+    },
+    "vertex_struct": {
+      "name": "struct vertex",
+      "fields": {
+        "x": "int - X coordinate", 
+        "y": "int - Y coordinate"
+      }
+    },
+    "path_list_struct": {
+      "name": "struct path_list",
+      "description": "Used for returning lists of paths containing a point",
+      "fields": {
+        "rnum": "region_rnum - Path array index",
+        "glyph_type": "int - Which glyph type to use at this location",
+        "next": "struct path_list* - Next path in list"
+      }
+    }
+  },
+  "database_schema": {
+    "primary_table": {
+      "name": "path_data",
+      "description": "Main table storing path definitions",
+      "sql": "CREATE TABLE path_data (\n    vnum INT PRIMARY KEY,\n    zone_vnum INT,\n    name VARCHAR(255),\n    path_type INT,\n    path_linestring GEOMETRY,\n    path_props INT,\n    SPATIAL INDEX(path_linestring)\n);",
+      "fields": {
+        "vnum": "Unique path identifier",
+        "zone_vnum": "Zone this path belongs to",
+        "name": "Human-readable path name",
+        "path_type": "Type constant (1,2,3,5,6)",
+        "path_linestring": "MySQL GEOMETRY field storing linestring route",
+        "path_props": "Sector type to apply (0-36 from sector_types)"
+      }
+    },
+    "index_table": {
+      "name": "path_index",
+      "description": "Optimized spatial index table for faster queries", 
+      "sql": "CREATE TABLE path_index (\n    vnum INT PRIMARY KEY,\n    zone_vnum INT,\n    path_linestring GEOMETRY,\n    SPATIAL INDEX(path_linestring),\n    FOREIGN KEY (vnum) REFERENCES path_data(vnum)\n);",
+      "purpose": "Performance optimization for spatial queries"
+    },
+    "glyph_definitions": {
+      "name": "path_types",
+      "description": "Path type definitions with display glyphs",
+      "sql": "CREATE TABLE path_types (\n    path_type INT PRIMARY KEY,\n    glyph_ns VARCHAR(50),    -- North-South glyph\n    glyph_ew VARCHAR(50),    -- East-West glyph\n    glyph_int VARCHAR(50)    -- Intersection glyph\n);",
+      "purpose": "Stores visual representation data for each path type"
+    }
+  },
+  "coordinate_system": {
+    "description": "Same 2D coordinate system as regions",
+    "range": {
+      "x": "-1024 to +1024",
+      "y": "-1024 to +1024"
+    },
+    "origin": "(0,0) at map center",
+    "linestring_format": "LINESTRING(x1 y1, x2 y2, x3 y3, ...)",
+    "direction_mapping": {
+      "north": "+Y increase",
+      "south": "-Y decrease", 
+      "east": "+X increase",
+      "west": "-X decrease"
+    }
+  },
+  "spatial_queries": {
+    "path_intersect": {
+      "description": "Check if coordinates intersect with a path",
+      "sql": "SELECT vnum FROM path_index WHERE ST_Intersects(GeomFromText('POINT(x y)'), path_linestring)"
+    },
+    "buffer_intersect": {
+      "description": "Find paths within buffer distance (for wide paths)",
+      "sql": "SELECT vnum FROM path_index WHERE ST_Intersects(ST_Buffer(GeomFromText('POINT(x y)'), buffer_distance), path_linestring)"
+    },
+    "path_direction": {
+      "description": "Determine path orientation at intersection point",
+      "purpose": "Used to select appropriate glyph (NS, EW, or intersection)"
+    }
+  },
+  "processing_flow": {
+    "terrain_generation": [
+      "Calculate base terrain using Perlin noise",
+      "Apply region effects first (if any)",
+      "Get enclosing paths for coordinate using spatial query", 
+      "Apply path effects (override with path_props sector type)",
+      "Determine appropriate glyph based on path orientation",
+      "Return final sector type and glyph information"
+    ],
+    "path_priority": "Paths are processed after regions and can override region effects",
+    "glyph_selection": [
+      "Analyze path direction at current coordinate",
+      "Determine if multiple paths intersect (intersection glyph)",
+      "Select NS glyph for vertical paths, EW for horizontal paths"
+    ]
+  },
+  "key_functions": {
+    "load_paths": {
+      "file": "mysql.c",
+      "description": "Loads all paths from database into path_table array",
+      "sql_query": "SELECT vnum, zone_vnum, name, path_type, NumPoints(path_linestring), AsText(path_linestring), path_props FROM path_data"
+    },
+    "get_enclosing_paths": {
+      "file": "mysql.c",
+      "description": "Returns list of paths intersecting a specific coordinate",
+      "returns": "struct path_list* - Linked list of intersecting paths with glyph info"
+    },
+    "generate_river": {
+      "file": "wilderness.c",
+      "description": "Procedurally generates a river path using gradient descent algorithm",
+      "parameters": ["direction", "region_vnum", "name"]
+    }
+  },
+  "integration_points": {
+    "terrain_generation": "wilderness.c - get_modified_sector_type(), get_map()",
+    "map_display": "wilderness.c - show_wilderness_map() uses path glyphs",
+    "river_generation": "wilderness.c - generate_river() creates procedural rivers",
+    "builder_tools": "oasis_list.c - pathlist command for path management",
+    "room_assignment": "wilderness.c - assign_wilderness_room() applies path sectors"
+  },
+  "river_generation": {
+    "description": "Procedural river generation system",
+    "algorithm": "Gradient descent following terrain elevation",
+    "function": "generate_river()",
+    "parameters": {
+      "ch": "Character requesting generation (for feedback)",
+      "dir": "Initial direction (0-7 for 8 compass directions)",
+      "vnum": "Region vnum for the generated river",
+      "name": "Name for the generated river"
+    },
+    "process": [
+      "Start at current location",
+      "Follow elevation gradient downhill",
+      "Create linestring geometry from path points",
+      "Insert into database as PATH_RIVER type",
+      "Apply water sector along generated path"
+    ]
+  },
+  "constants": {
+    "files": ["wilderness.h"],
+    "defines": {
+      "PATH_ROAD": 1,
+      "PATH_DIRT_ROAD": 2,
+      "PATH_GEOGRAPHIC": 3,
+      "PATH_RIVER": 5,
+      "PATH_STREAM": 6,
+      "GLYPH_TYPE_NONE": -1,
+      "GLYPH_TYPE_PATH_NS": 0,
+      "GLYPH_TYPE_PATH_EW": 1,
+      "GLYPH_TYPE_PATH_INT": 2
+    }
+  },
+  "example_usage": {
+    "create_main_road": {
+      "description": "Create a major paved road connecting cities",
+      "sql": "INSERT INTO path_data (vnum, zone_vnum, name, path_type, path_linestring, path_props) VALUES (2001, 100, 'King\\'s Highway', 1, GeomFromText('LINESTRING(0 0, 10 0, 20 0, 30 0)'), 12)",
+      "explanation": "path_props = 12 (Road East-West sector type)"
+    },
+    "create_river": {
+      "description": "Create a river flowing through terrain",
+      "sql": "INSERT INTO path_data (vnum, zone_vnum, name, path_type, path_linestring, path_props) VALUES (2002, 100, 'Swift River', 5, GeomFromText('LINESTRING(0 50, 5 45, 10 40, 15 35, 20 30)'), 36)",
+      "explanation": "path_props = 36 (River sector type), linestring follows downhill gradient"
+    },
+    "create_dirt_trail": {
+      "description": "Create a rural dirt path",
+      "sql": "INSERT INTO path_data (vnum, zone_vnum, name, path_type, path_linestring, path_props) VALUES (2003, 100, 'Forest Trail', 2, GeomFromText('LINESTRING(10 10, 15 15, 20 20, 25 25)'), 26)",
+      "explanation": "path_props = 26 (Dirt Road North-South sector type)"
+    }
+  },
+  "path_glyphs": {
+    "description": "Visual representation system for different path types",
+    "glyph_format": "Unicode or ASCII characters for display on wilderness map",
+    "orientation_detection": [
+      "Calculate angle of path segment at current position",
+      "Determine if more vertical (NS) or horizontal (EW)",
+      "Check for intersections with other paths",
+      "Select appropriate glyph from glyphs array"
+    ],
+    "common_glyphs": {
+      "roads": {
+        "ns": "|",
+        "ew": "-", 
+        "intersection": "+"
+      },
+      "rivers": {
+        "ns": "~",
+        "ew": "~",
+        "intersection": "~"
+      }
+    }
+  },
+  "performance_considerations": {
+    "spatial_indexing": "MySQL spatial indexes provide O(log n) path lookup performance",
+    "linestring_precision": "Balance between accuracy and performance in vertex density",
+    "glyph_caching": "Cache glyph calculations to avoid repeated trigonometric operations",
+    "buffer_queries": "Use appropriate buffer sizes for path width calculations"
+  },
+  "common_patterns": {
+    "layered_features": "Paths processed after regions, can override region effects",
+    "intersection_handling": "Multiple paths at same coordinate use intersection glyph",
+    "procedural_integration": "Generated rivers integrate seamlessly with hand-placed paths",
+    "sector_consistency": "Path sectors should match logical path type (roads use road sectors)"
+  },
+  "troubleshooting": {
+    "path_not_visible": [
+      "Check linestring geometry is valid",
+      "Verify coordinates are within wilderness bounds",
+      "Ensure path_props references valid sector type",
+      "Check spatial index is populated"
+    ],
+    "glyph_issues": [
+      "Verify glyphs array is properly populated",
+      "Check glyph_type calculation logic",
+      "Ensure Unicode glyphs are supported by client"
+    ],
+    "river_generation_fails": [
+      "Check starting elevation has valid gradient",
+      "Verify terrain data is loaded",
+      "Ensure database has write permissions",
+      "Check for coordinate boundary violations"
+    ]
+  },
+  "builder_commands": {
+    "pathlist": {
+      "description": "List paths in the wilderness",
+      "usage": "pathlist [distance|type <num>|types]",
+      "examples": [
+        "pathlist 5 - List paths within 5 units",
+        "pathlist type 1 - List all roads",
+        "pathlist types - Show available path types"
+      ]
+    },
+    "generate": {
+      "description": "Generate procedural rivers",
+      "usage": "Related to generate_river() function",
+      "purpose": "Create realistic river paths following terrain"
+    }
+  }
+}
