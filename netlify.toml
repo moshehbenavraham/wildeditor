@@ -1,0 +1,39 @@
+[build]
+  # Build command - builds the frontend workspace
+  command = "npm run build"
+  
+  # Publish directory - Vite's default output directory for the frontend
+  publish = "apps/frontend/dist"
+  
+  # Node.js version
+  NODE_VERSION = "18"
+
+[build.environment]
+  # Enable npm workspaces
+  NPM_FLAGS = "--legacy-peer-deps"
+  
+  # Disable secrets scanning for Vite environment variables (they're meant to be public)
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_ANON_KEY,VITE_SUPABASE_URL"
+
+# Redirect rules for SPA (Single Page Application)
+# This handles client-side routing for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.com"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
