@@ -35,8 +35,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
+    "dev": "npm run dev --workspace=@wildeditor/frontend",
+    "build": "npm run build --workspace=@wildeditor/frontend",
+    "preview": "npm run preview --workspace=@wildeditor/frontend",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "type-check": "turbo run type-check",
@@ -44,7 +45,8 @@
     "dev:frontend": "npm run dev --workspace=@wildeditor/frontend",
     "dev:backend": "npm run dev --workspace=@wildeditor/backend",
     "build:frontend": "npm run build --workspace=@wildeditor/frontend",
-    "build:backend": "npm run build --workspace=@wildeditor/backend"
+    "build:backend": "npm run build --workspace=@wildeditor/backend",
+    "build:all": "turbo run build"
   },
   "devDependencies": {
     "turbo": "^2.0.0"
