@@ -135,14 +135,63 @@ LOG_LEVEL=INFO
 
 ### Netlify Deployment
 
+#### Required Netlify Environment Variables
+
+Set these in **Netlify Dashboard** → **Site configuration** → **Environment variables**:
+
+```bash
+# Required for production build
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=https://your-backend-api-url/api
+
+# Application settings  
+VITE_APP_NAME=Luminari Wilderness Editor
+VITE_ENVIRONMENT=production
+VITE_ENABLE_DEBUG=false
+VITE_ENABLE_ANALYTICS=true
+```
+
+#### Required GitHub Repository Secrets
+
+Set these in **GitHub Repository** → **Settings** → **Secrets and variables** → **Actions**:
+
+```bash
+# Netlify deployment secrets
+NETLIFY_AUTH_TOKEN=your_netlify_personal_access_token
+NETLIFY_PROD_SITE_ID=your_netlify_site_id
+
+# Slack notifications (for CI/CD pipeline)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+
+# Supabase secrets (for GitHub Actions builds)
+PROD_SUPABASE_URL=your_production_supabase_url
+PROD_SUPABASE_ANON_KEY=your_production_supabase_anon_key
+PROD_API_URL=https://your-backend-api-url/api
+```
+
+#### How to Find Netlify Values:
+
+**1. Netlify Auth Token:**
+- Go to https://app.netlify.com/user/applications#personal-access-tokens
+- Click **New access token**
+- Name it "GitHub Actions" and generate
+- Copy immediately (you won't see it again)
+
+**2. Netlify Site ID:**
+- In your site dashboard: **Site configuration** → **General**
+- Scroll to **Project information** 
+- Copy the **Site ID** (format: abc123def-456g-789h-012i-jklmnopqrstu)
+
 #### netlify.toml
 ```toml
 [build]
-  publish = "dist"
+  publish = "apps/frontend/dist"
   command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 [[redirects]]
   from = "/api/*"
@@ -154,11 +203,21 @@ LOG_LEVEL=INFO
   to = "/index.html"
   status = 200
 
-[context.production.environment]
-  VITE_API_URL = "https://api.wildeditor.luminari.com"
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.com"
 
-[context.deploy-preview.environment]
-  VITE_API_URL = "https://staging-api.wildeditor.luminari.com"
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 ```
 
 #### Deployment Steps

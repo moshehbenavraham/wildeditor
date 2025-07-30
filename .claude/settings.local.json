@@ -22,7 +22,9 @@
       "Bash(timeout:*)",
       "Bash(cat:*)",
       "Bash(docker-compose:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(gh run list:*)",
+      "WebFetch(domain:docs.netlify.com)"
     ],
     "deny": []
   }
