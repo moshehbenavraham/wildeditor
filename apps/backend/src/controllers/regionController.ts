@@ -36,6 +36,7 @@ export const createRegion = async (req: AuthenticatedRequest, res: Response) => 
     if (!regionData.name || !regionData.type || !regionData.coordinates || !Array.isArray(regionData.coordinates)) {
       return res.status(400).json({ error: 'Missing required fields: name, type, coordinates' });
     }
+    
     const region = await RegionModel.create(regionData);
     res.status(201).json({ data: region, message: 'Region created successfully' });
   } catch (error) {
@@ -53,6 +54,7 @@ export const updateRegion = async (req: AuthenticatedRequest, res: Response) => 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No fields provided for update' });
     }
+    
     const region = await RegionModel.update(id, updates);
     res.json({ data: region, message: 'Region updated successfully' });
   } catch (error) {

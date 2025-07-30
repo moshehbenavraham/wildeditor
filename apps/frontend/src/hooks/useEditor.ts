@@ -218,35 +218,41 @@ export const useEditor = () => {
     if ('coordinates' in state.selectedItem) {
       if ('vnum' in state.selectedItem && 'type' in state.selectedItem) {
         // It's a Region or Path
-        if (state.selectedItem.coordinates.length >= 3) {
-          // It's a Region
-          setRegions(prev => prev.map(region => 
-            region.id === itemId
-              ? { ...region, ...updates } as Region
-              : region
-          ));
+        // Check if it's a region or path by checking if it has a vnum property
+        if ('vnum' in state.selectedItem) {
+          // First check if it's in regions array
+          const isRegion = regions.some(r => r.id === itemId);
           
-          // Save to API
-          if (session?.access_token) {
-            apiClient.updateRegion(itemId, updates).catch(err => {
-              console.error('Failed to update region:', err);
-              setError('Failed to update region');
-            });
-          }
-        } else {
-          // It's a Path
-          setPaths(prev => prev.map(path => 
-            path.id === itemId
-              ? { ...path, ...updates } as Path
-              : path
-          ));
-          
-          // Save to API
-          if (session?.access_token) {
-            apiClient.updatePath(itemId, updates).catch(err => {
-              console.error('Failed to update path:', err);
-              setError('Failed to update path');
-            });
+          if (isRegion) {
+            // It's a Region
+            setRegions(prev => prev.map(region => 
+              region.id === itemId
+                ? { ...region, ...updates } as Region
+                : region
+            ));
+            
+            // Save to API
+            if (session?.access_token) {
+              apiClient.updateRegion(itemId, updates).catch(err => {
+                console.error('Failed to update region:', err);
+                setError('Failed to update region');
+              });
+            }
+          } else {
+            // It's a Path
+            setPaths(prev => prev.map(path => 
+              path.id === itemId
+                ? { ...path, ...updates } as Path
+                : path
+            ));
+            
+            // Save to API
+            if (session?.access_token) {
+              apiClient.updatePath(itemId, updates).catch(err => {
+                console.error('Failed to update path:', err);
+                setError('Failed to update path');
+              });
+            }
           }
         }
       }
@@ -268,7 +274,7 @@ export const useEditor = () => {
     }
     
     setState(prev => ({ ...prev, selectedItem: { ...prev.selectedItem!, ...updates } }));
-  }, [state.selectedItem, session]);
+  }, [state.selectedItem, session, regions]);
 
   return {
     state,

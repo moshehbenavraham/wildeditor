@@ -65,7 +65,7 @@ export interface RegionEntity {
   id: string;
   vnum: number;
   name: string;
-  type: string;
+  type: Region['type'];
   coordinates: Coordinate[];
   properties?: string;
   color: string;
@@ -77,7 +77,7 @@ export interface PathEntity {
   id: string;
   vnum: number;
   name: string;
-  type: string;
+  type: Path['type'];
   coordinates: Coordinate[];
   color: string;
   created_at: string;
@@ -87,7 +87,7 @@ export interface PathEntity {
 export interface PointEntity {
   id: string;
   name: string;
-  type: string;
+  type: Point['type'];
   coordinate: Coordinate;
   created_at: string;
   updated_at: string;
