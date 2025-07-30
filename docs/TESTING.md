@@ -18,8 +18,9 @@
 
 ## Backend Testing
 
-<!-- Express API endpoint testing (current) -->
-<!-- Python FastAPI testing (future) -->
+<!-- Python FastAPI endpoint testing with pytest -->
+<!-- Pydantic schema validation testing -->
+<!-- SQLAlchemy model testing -->
 <!-- Database integration testing -->
 <!-- Authentication middleware testing -->
 

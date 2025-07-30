@@ -7,31 +7,25 @@ This guide provides technical information for developers working on the Luminari
 ### System Architecture
 
 ```
+DEVELOPMENT:
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │   Backend API   │    │   Database      │
-│   (React/TS)    │◄──►│   (Express TS)  │◄──►│   (Supabase)    │
-│                 │    │   TEMPORARY     │    │   Development   │
+│   (React/TS)    │◄──►│   (FastAPI)     │◄──►│   (Supabase)    │
+│                 │    │   (Python 3.8+) │    │   Development   │
 │ - Map Interface │    │ - Authentication│    │ - Spatial Data  │
 │ - Drawing Tools │    │ - CRUD Ops      │    │ - Region Tables │
-│ - State Mgmt    │    │ - Validation    │    │ - Path Tables   │
+│ - State Mgmt    │    │ - OpenAPI Docs  │    │ - Path Tables   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │              PRODUCTION ARCHITECTURE:         │
-         │                       │                       │
-         └──────────────►┌─────────────────┐◄────────────┘
-                         │   Python API    │
-                         │   (FastAPI)     │
-                         │                 │
-                         │ - MySQL Direct │
-                         │ - Game Integration
-                         │ - Spatial Ops   │
-                         └─────────────────┘
-                                  │
-                         ┌─────────────────┐
-                         │ LuminariMUD     │
-                         │ MySQL Tables    │
-                         │ (Production)    │
-                         └─────────────────┘
+
+PRODUCTION:
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend API   │    │ LuminariMUD     │
+│   (React/TS)    │◄──►│   (FastAPI)     │◄──►│   MySQL         │
+│                 │    │   (Python 3.8+) │    │                 │
+│ - Map Interface │    │ - Authentication│    │ - Game Tables   │
+│ - Drawing Tools │    │ - CRUD Ops      │    │ - Spatial Data  │
+│ - State Mgmt    │    │ - Game Integration   │ - Live Game DB  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ### Technology Stack

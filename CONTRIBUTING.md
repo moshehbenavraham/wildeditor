@@ -7,7 +7,8 @@ Thank you for your interest in contributing to the Luminari Wilderness Editor! T
 ### Prerequisites
 
 Before you begin, ensure you have the following installed:
-- **Node.js 18+** and npm
+- **Node.js 18+** and npm (for frontend)
+- **Python 3.8+** (for FastAPI backend)
 - **Git** for version control
 - **Modern web browser** (Chrome, Firefox, Safari, Edge)
 - **Code editor** (VS Code recommended)
@@ -22,18 +23,33 @@ Before you begin, ensure you have the following installed:
 
 2. **Install dependencies**
    ```bash
+   # Install frontend dependencies
    npm install
+   
+   # Install Python backend dependencies
+   cd apps/backend/src
+   pip install -r requirements.txt
    ```
 
 3. **Set up environment variables**
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   # Frontend configuration
+   cp apps/frontend/.env.example apps/frontend/.env
+   # Edit with your API URL
+   
+   # Backend configuration
+   cp apps/backend/.env.example apps/backend/.env
+   # Edit with your MySQL database credentials
    ```
 
-4. **Start the development server**
+4. **Start the development servers**
    ```bash
-   npm run dev
+   # Terminal 1: Start frontend
+   npm run dev:frontend
+   
+   # Terminal 2: Start Python backend
+   cd apps/backend/src
+   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 5. **Verify the setup**

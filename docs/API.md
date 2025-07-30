@@ -4,12 +4,12 @@ This document describes the API endpoints and data structures used by the Lumina
 
 ## Current Implementation
 
-The backend is currently implemented using Express.js with TypeScript as a **TEMPORARY** solution. This will be replaced with Python FastAPI that integrates directly with LuminariMUD's existing MySQL spatial tables.
+The backend is implemented using **Python FastAPI** that integrates directly with LuminariMUD's existing MySQL spatial tables. FastAPI provides automatic OpenAPI documentation, high performance async operations, and robust type validation through Pydantic schemas.
 
 ## Base URL
 
 ```
-Development: http://localhost:3001/api
+Development: http://localhost:8000/api
 Production: https://api.wildedit.luminarimud.com
 ```
 
@@ -21,7 +21,7 @@ The API uses Supabase JWT authentication. Include the access token in the Author
 Authorization: Bearer <your-supabase-access-token>
 ```
 
-The authentication middleware validates tokens with Supabase before allowing access to protected endpoints.
+The FastAPI authentication middleware validates tokens with Supabase before allowing access to protected endpoints. Authentication is configurable and can be adapted for production deployment.
 
 ## Data Types
 

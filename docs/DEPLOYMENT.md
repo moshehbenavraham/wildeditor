@@ -10,10 +10,10 @@ This guide covers deployment procedures, environment setup, and configuration fo
 3. Publish directory: `dist` 
 4. Set environment variables from `.env.production.example`
 
-### Backend → Coolify (Current Express)
+### Backend → Coolify (Python FastAPI)
 1. Connect repository, select `docker-compose` build pack
-2. Use `docker-compose.prod.yml`  
-3. Set environment variables: `FRONTEND_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
+2. Use `docker-compose.prod.yml` (configured for Python FastAPI)
+3. Set environment variables: `MYSQL_DATABASE_URL`, `FRONTEND_URL`, `JWT_SECRET`
 4. Deploy automatically with health checks
 
 ## 🚀 Deployment Overview
@@ -23,15 +23,15 @@ This guide covers deployment procedures, environment setup, and configuration fo
 ```
 DEVELOPMENT:
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Express API   │    │   Supabase      │
-│   (Netlify)     │◄──►│   (TEMPORARY)   │◄──►│   PostgreSQL    │
+│   Frontend      │    │   Python API    │    │   Supabase      │
+│   (Netlify)     │◄──►│   (FastAPI)     │◄──►│   PostgreSQL    │
 │                 │    │                 │    │                 │
 │ - React Build   │    │ - Authentication│    │ - Development   │
 │ - Static Assets │    │ - API Endpoints │    │ - Local Changes │
-│ - CDN Caching   │    │ - JWT Tokens    │    │ - Temp Storage  │
+│ - CDN Caching   │    │ - OpenAPI Docs  │    │ - Test Data     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 
-PRODUCTION (Future):
+PRODUCTION:
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │   Python API    │    │ LuminariMUD     │
 │   (CDN/Static)  │◄──►│   (FastAPI)     │◄──►│   MySQL         │
@@ -44,10 +44,12 @@ PRODUCTION (Future):
 
 ### Supported Platforms
 
-**Development/Current:**
+**Current Implementation:**
 - **Frontend**: Netlify (current), Vercel, AWS S3 + CloudFront
-- **Backend**: Express.js (TEMPORARY) - any Node.js hosting
-- **Database**: Supabase PostgreSQL (development only)
+- **Backend**: Python FastAPI - any Python hosting (Docker, PaaS, VPS)
+- **Database**: 
+  - Development: Supabase PostgreSQL
+  - Production: Direct MySQL integration with LuminariMUD
 
 **Production/Future:**
 - **Frontend**: Same as development
