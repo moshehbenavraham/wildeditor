@@ -12,7 +12,16 @@ class PointBase(BaseModel):
 class PointCreate(PointBase):
     pass
 
+class PointUpdate(BaseModel):
+    vnum: Optional[int] = None
+    x: Optional[float] = None
+    y: Optional[float] = None
+    z: Optional[float] = None
+    region_id: Optional[int] = None
+    properties: Optional[str] = None
+
 class PointResponse(PointBase):
     id: int
+    
     class Config:
-        orm_mode = True
+        from_attributes = True
