@@ -249,3 +249,4 @@ jobs:
           text: '❌ Wildeditor deployment to production failed!'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
