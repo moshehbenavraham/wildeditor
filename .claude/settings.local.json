@@ -15,7 +15,14 @@
       "Bash(npx tsx:*)",
       "Bash(npx turbo run lint:*)",
       "Bash(git rm:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(touch:*)",
+      "Bash(timeout 5 curl -v http://localhost:3001/api/health)",
+      "Bash(pkill:*)",
+      "Bash(timeout:*)",
+      "Bash(cat:*)",
+      "Bash(docker-compose:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

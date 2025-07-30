@@ -1,0 +1,34 @@
+# Coolify Configuration File
+# This file provides hints to Coolify about how to deploy this application
+
+services:
+  wildeditor-backend:
+    build_command: "npm run build"
+    start_command: "npm start"
+    port: 3001
+    healthcheck: "/api/health"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      - type: bind
+        source: ./logs
+        target: /app/logs
+        is_directory: true
+    
+# Alternative configurations
+build_packs:
+  preferred: "docker-compose"
+  compose_file: "docker-compose.prod.yml"
+  fallback: "nixpacks"
+
+# Environment variables that should be set in Coolify UI
+required_env:
+  - FRONTEND_URL
+  - SUPABASE_URL  
+  - SUPABASE_SERVICE_KEY
+
+# Optional environment variables with defaults
+optional_env:
+  PORT: 3001
+  NODE_ENV: production

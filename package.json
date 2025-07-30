@@ -47,7 +47,9 @@
     "dev:backend": "npm run dev --workspace=@wildeditor/backend",
     "build:frontend": "npm run build --workspace=@wildeditor/frontend",
     "build:backend": "npm run build --workspace=@wildeditor/backend",
-    "build:all": "turbo run build"
+    "build:all": "turbo run build",
+    "build": "npm run build:backend",
+    "start": "npm run start --workspace=@wildeditor/backend"
   },
   "devDependencies": {
     "turbo": "^2.0.0"

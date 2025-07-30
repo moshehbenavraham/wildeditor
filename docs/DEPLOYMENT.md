@@ -2,6 +2,20 @@
 
 This guide covers deployment procedures, environment setup, and configuration for the Luminari Wilderness Editor.
 
+## 🚀 Quick Start Deployments
+
+### Frontend → Netlify (Current)
+1. Connect GitHub repository to Netlify
+2. Build command: `npm run build`
+3. Publish directory: `dist` 
+4. Set environment variables from `.env.production.example`
+
+### Backend → Coolify (Current Express)
+1. Connect repository, select `docker-compose` build pack
+2. Use `docker-compose.prod.yml`  
+3. Set environment variables: `FRONTEND_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
+4. Deploy automatically with health checks
+
 ## 🚀 Deployment Overview
 
 ### Deployment Architecture
@@ -255,6 +269,51 @@ echo "Deployment complete!"
 ```
 
 ## 🖥️ Backend Deployment
+
+### Coolify Deployment (Recommended for Current Express Backend)
+
+#### Option 1: Docker Compose (Recommended)
+
+**Setup:**
+1. **Connect Repository**: Add your Git repository to Coolify
+2. **Build Pack**: Select `docker-compose`
+3. **Compose File**: Use `docker-compose.prod.yml`
+4. **Environment Variables**: Set these in Coolify dashboard:
+   ```
+   FRONTEND_URL=https://your-frontend-domain.com
+   SUPABASE_URL=your_production_supabase_url
+   SUPABASE_SERVICE_KEY=your_production_supabase_service_role_key
+   ```
+
+**Features:**
+- Multi-stage Docker build for optimized production images
+- Built-in health checks at `/api/health`
+- Auto-restart with `unless-stopped` policy
+- Proper container networking and security
+
+#### Option 2: Simple Dockerfile
+1. **Build Pack**: Select `dockerfile`
+2. **Dockerfile Location**: `./Dockerfile`
+3. **Same Environment Variables** as Docker Compose
+
+#### Option 3: Nixpacks Auto-Detection
+1. **Build Pack**: Select `nixpacks`
+2. **Auto-detected Commands**: `npm run build` and `npm start`
+3. **Port**: 3001 (auto-detected)
+
+**Deployment Process:**
+Coolify automatically:
+- Installs monorepo dependencies correctly
+- Builds only the backend workspace  
+- Starts Express server with proper health monitoring
+- Handles CORS, networking, and container management
+
+**Pre-Deployment Checklist:**
+- [ ] Production Supabase project created
+- [ ] Database tables created (run `database-setup.sql`)
+- [ ] Service role key obtained from Supabase
+- [ ] Frontend domain configured for CORS
+- [ ] Environment variables set in Coolify
 
 ### Docker Deployment
 

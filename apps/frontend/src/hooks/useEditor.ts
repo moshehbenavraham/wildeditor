@@ -52,45 +52,10 @@ export const useEditor = () => {
       console.error('Failed to load data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load data');
       
-      // Fallback to mock data on error
-      setRegions([
-        {
-          id: '1',
-          vnum: 101,
-          name: 'Darkwood Forest',
-          type: 'geographic',
-          coordinates: [
-            { x: 102, y: 205 },
-            { x: 145, y: 210 },
-            { x: 150, y: 180 },
-            { x: 102, y: 175 }
-          ],
-          properties: 'Forest terrain',
-          color: '#22C55E'
-        }
-      ]);
-      setPaths([
-        {
-          id: '1',
-          vnum: 201,
-          name: 'Old Trade Road',
-          type: 'road',
-          coordinates: [
-            { x: -100, y: -100 },
-            { x: 0, y: 0 },
-            { x: 100, y: 100 }
-          ],
-          color: '#8B5CF6'
-        }
-      ]);
-      setPoints([
-        {
-          id: '1',
-          coordinate: { x: 75, y: 85 },
-          name: 'Ancient Obelisk',
-          type: 'landmark'
-        }
-      ]);
+      // Clear data on error - no more fallback mock data
+      setRegions([]);
+      setPaths([]);
+      setPoints([]);
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,51 @@
+# Docker ignore file for production builds
+
+# Node modules (will be installed in container)
+node_modules/
+apps/*/node_modules/
+packages/*/node_modules/
+
+# Development files
+.env*
+!.env.production.example
+*.local
+
+# Build artifacts (will be built in container)
+dist/
+apps/*/dist/
+
+# Development tools
+.vscode/
+.idea/
+
+# Frontend specific (not needed for backend deployment)
+apps/frontend/
+
+# Git
+.git/
+.gitignore
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul  
+coverage/
+
+# Dependency directories
+.npm
+.cache/
+
+# Optional REPL history
+.node_repl_history
+
+# Documentation (not needed in production)
+docs/
+*.md
+!README.md
