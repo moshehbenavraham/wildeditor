@@ -140,33 +140,33 @@ CREATE TABLE regions (
   vnum INT UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
   type VARCHAR(100) NOT NULL,
-  coordinates jsonb not null,
-  properties text,
-  color text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  coordinates JSON NOT NULL,
+  properties TEXT,
+  color VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Paths table  
-create table paths (
-  id uuid primary key default gen_random_uuid(),
-  vnum integer unique not null,
-  name text not null,
-  type text not null,
-  coordinates jsonb not null,
-  color text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+CREATE TABLE paths (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  vnum INT UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(100) NOT NULL,
+  coordinates JSON NOT NULL,
+  color VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Points table
-create table points (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  type text not null,
-  coordinate jsonb not null,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+CREATE TABLE points (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(100) NOT NULL,
+  coordinate JSON NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 
@@ -340,6 +340,7 @@ For comprehensive information beyond this technical overview, refer to:
 ### Essential Documentation
 - **[README.md](README.md)** - Project overview, quick start, and complete documentation map
 - **[SETUP.md](SETUP.md)** - Detailed setup instructions
+- **[docs/README_DOCS.md](docs/README_DOCS.md)** - Documentation index and organization guide
 - **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Full development guide and best practices
 - **[docs/API.md](docs/API.md)** - Complete API reference and examples
 

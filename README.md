@@ -114,9 +114,8 @@ wildeditor/
 │   │   ├── src/
 │   │   ├── public/
 │   │   └── package.json
-│   └── backend/           # Express TypeScript API
-│       ├── src/
-│       └── package.json
+│   └── backend/           # Python FastAPI backend
+│       └── src/
 ├── packages/
 │   └── shared/            # Shared types and utilities
 │       └── src/types/
@@ -129,6 +128,7 @@ wildeditor/
 ### 🚀 Getting Started
 - **[User Guide](docs/USER_GUIDE.md)** - How to use the wilderness editor interface and tools
 - **[Setup Guide](SETUP.md)** - Quick start installation and configuration
+- **[Documentation Index](docs/README_DOCS.md)** - Complete documentation organization and guide
 
 ### 👩‍💻 Development
 - **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Technical architecture and development workflow
@@ -180,12 +180,12 @@ This editor integrates seamlessly with the LuminariMUD wilderness system:
 - **Supabase Auth** - User authentication
 
 ### Backend (`apps/backend/`)
-- **Express.js** - Node.js web framework (temporary, will be replaced with Python)
-- **TypeScript** - Type-safe backend development
-- **Supabase** - PostgreSQL with PostGIS for development/local changes
+- **FastAPI** - Python 3.8+ web framework with automatic OpenAPI documentation
+- **SQLAlchemy** - Database ORM for MySQL integration
+- **Pydantic** - Request/response validation and serialization
 - **MySQL Integration** - Direct connection to LuminariMUD's existing spatial tables
-- **JWT Authentication** - Secure API access
-- **Helmet & CORS** - Security middleware
+- **JWT Authentication** - Secure API access (configurable)
+- **Uvicorn** - ASGI server for high-performance async operations
 
 ### Shared (`packages/shared/`)
 - **TypeScript Interfaces** - Shared types between frontend and backend
@@ -210,12 +210,12 @@ See the [Monorepo Structure](#-monorepo-structure) section above for the high-le
   - `lib/` - Utility libraries (Supabase client)
   - `types/` - TypeScript type imports from shared
 
-- **`apps/backend/src/`** - Express API source
-  - `routes/` - API endpoint definitions
-  - `controllers/` - Request handling logic
-  - `middleware/` - Authentication and validation
-  - `models/` - Database models and queries
-  - `config/` - Configuration and database setup
+- **`apps/backend/src/`** - FastAPI Python backend source
+  - `routers/` - FastAPI endpoint definitions
+  - `schemas/` - Pydantic request/response schemas
+  - `models/` - SQLAlchemy database models
+  - `config/` - Database configuration and setup
+  - `main.py` - FastAPI application entry point
 
 - **`packages/shared/src/`** - Shared code
   - `types/` - TypeScript interfaces used by both frontend and backend
