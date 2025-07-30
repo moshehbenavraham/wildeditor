@@ -41,12 +41,14 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "type-check": "turbo run type-check",
+    "test": "turbo run test",
     "clean": "turbo run clean",
     "dev:frontend": "npm run dev --workspace=@wildeditor/frontend",
     "dev:backend": "npm run dev --workspace=@wildeditor/backend",
     "build:frontend": "npm run build --workspace=@wildeditor/frontend",
     "build:backend": "npm run build --workspace=@wildeditor/backend",
-    "build:all": "turbo run build"
+    "build:all": "turbo run build",
+    "start": "npm run start --workspace=@wildeditor/backend"
   },
   "devDependencies": {
     "turbo": "^2.0.0"

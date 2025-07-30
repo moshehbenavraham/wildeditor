@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **🎯 Drawing System Overhaul**: Comprehensive audit and stability improvements
+  - Geometric utility functions for accurate point-in-polygon selection
+  - Distance-to-line algorithms for precise path selection
+  - Canvas coordinate transformation validation and bounds checking
+  - Real-time visual feedback for drawing validity (color-coded indicators)
+  - Enhanced drawing instructions panel with keyboard shortcut guidance
+  - Auto-dismiss error notifications with user-friendly messages
+  - Loading overlay component for better user feedback during API operations
+  - Drawing cancellation functionality with ESC key support
+- **⚡ Performance Optimizations**:
+  - Canvas rendering memoization with pre-computed coordinate transformations
+  - Selective re-rendering to reduce computational overhead
+  - Memory leak prevention with proper useEffect cleanup
+- **🛡️ Input Validation & Security**:
+  - Coordinate bounds validation (-1024 to +1024) across all input fields
+  - Input sanitization for text fields with length limits
+  - VNUM validation with proper range checking (1-99999)
+  - Comprehensive form validation in Properties Panel
 - Comprehensive code quality audit and improvements
 - Input validation in all backend controllers
 - ESLint configuration for backend with TypeScript rules
@@ -15,12 +33,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consistent error handling patterns across all model methods
 
 ### Changed
+- **🎨 Enhanced User Experience**:
+  - Drawing state management with proper validation and cleanup
+  - Improved tool switching behavior with automatic state reset
+  - Visual indicators showing drawing progress and requirements
+  - Status text overlay showing real-time drawing guidance
+  - Enhanced Properties Panel with instructional content and validation
+- **🔧 Technical Improvements**:
+  - Coordinate system accuracy improvements for all zoom levels
+  - Selection logic rewritten with proper geometric algorithms
+  - Drawing state race condition prevention
+  - Canvas rendering optimization with zoom-aware transformations
 - Improved type safety by replacing `any` types with proper TypeScript types
 - Enhanced error handling in frontend with proper unknown type usage
 - Optimized Region/Path identification logic in UI components
 - Updated ESLint configurations to resolve compatibility issues
 
 ### Fixed
+- **🚀 Netlify Deployment Issues**:
+  - Added missing `test` script in root package.json to fix Netlify build failures
+  - Added placeholder test scripts to all workspace packages (frontend, backend, shared)
+  - Updated turbo.json configuration to include test task with proper dependencies
+  - Fixed root tsconfig.json references to point to workspace directories instead of non-existent files
+  - Resolved TypeScript compilation errors for `npx tsc --noEmit` command
+- **🚨 Critical Drawing System Issues**:
+  - **Selection Logic**: Replaced primitive hit-testing with proper point-in-polygon algorithm for regions
+  - **Path Selection**: Implemented distance-to-line calculation for accurate path selection
+  - **Coordinate Accuracy**: Fixed canvas-to-game coordinate conversion for all zoom levels
+  - **Drawing State**: Resolved race conditions and validation gaps in drawing operations
+  - **Memory Leaks**: Added proper cleanup in canvas rendering useEffect hooks
+- **🎯 User Interface Bugs**:
+  - Fixed coordinate transformation issues causing inaccurate mouse positioning
+  - Resolved drawing state conflicts when switching tools mid-draw
+  - Fixed canvas scaling issues affecting selection accuracy
+  - Corrected zoom functionality coordinate mapping
+- **⚠️ Stability & Performance**:
+  - Eliminated excessive canvas re-renders through memoization
+  - Fixed coordinate bounds checking and input sanitization
+  - Resolved drawing cancellation and cleanup issues
+  - Improved error handling with user-visible notifications
 - **Critical Logic Bug**: Fixed incorrect Region/Path identification in PropertiesPanel and useEditor
 - **Configuration Issues**: 
   - Updated turbo.json to use `tasks` instead of deprecated `pipeline` field
@@ -39,6 +90,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All ESLint issues resolved across frontend, backend, and shared packages
   - All TypeScript type checking issues resolved
   - Removed usage of `any` types in favor of proper type annotations
+
+### Security
+- Enhanced input validation preventing coordinate injection attacks
+- Improved bounds checking for all coordinate inputs
+- Added text input sanitization with length limits
 
 ## [0.2.0] - 2025-01-30
 

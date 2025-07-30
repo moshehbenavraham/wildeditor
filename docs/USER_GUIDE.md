@@ -40,12 +40,15 @@ The editor consists of three main areas:
 ### Drawing Tools
 
 #### Select Tool 🎯
-- **Purpose**: Select and edit existing features
-- **Usage**: Click on regions or paths to select them
+- **Purpose**: Select and edit existing features with precision
+- **Enhanced Selection**:
+  - **Regions**: Uses point-in-polygon algorithm for accurate selection
+  - **Paths**: Uses distance-to-line calculation for precise path selection
+  - **Points**: Improved hit detection with zoom-aware radius
 - **Features**: 
-  - View feature properties
-  - Edit coordinates manually
-  - Delete selected features
+  - View and edit feature properties
+  - Validated coordinate input with bounds checking (-1024 to +1024)
+  - Delete selected features with confirmation
 
 #### Point Tool 📍
 - **Purpose**: Create single-point landmarks
@@ -59,8 +62,12 @@ The editor consists of three main areas:
 - **Purpose**: Draw regions with multiple boundaries
 - **Usage**: 
   1. Click to start drawing
-  2. Click additional points to define the boundary
-  3. Double-click or press Enter to finish
+  2. Click additional points to define the boundary (minimum 3 points required)
+  3. Press **Enter** to finish or **Escape** to cancel
+- **Visual Feedback**:
+  - 🟡 **Orange**: Drawing in progress (needs more points)
+  - 🟢 **Green**: Valid polygon ready to finish
+  - Real-time point counter and status display
 - **Use Cases**:
   - Geographic regions (forests, mountains)
   - Encounter zones
@@ -70,8 +77,12 @@ The editor consists of three main areas:
 - **Purpose**: Draw linear features
 - **Usage**:
   1. Click to start the line
-  2. Click additional points along the path
-  3. Double-click or press Enter to finish
+  2. Click additional points along the path (minimum 2 points required)
+  3. Press **Enter** to finish or **Escape** to cancel
+- **Visual Feedback**:
+  - 🟡 **Orange**: Drawing in progress (needs more points)
+  - 🟢 **Green**: Valid path ready to finish
+  - Real-time point counter and guidance
 - **Use Cases**:
   - Roads and paths
   - Rivers and streams
@@ -183,6 +194,51 @@ The editor consists of three main areas:
    - Zone assignment
    - Special properties
 3. **Save changes** using the Save button
+
+## 🚨 Error Handling & User Feedback
+
+### Visual Feedback System
+
+The editor provides comprehensive visual feedback to guide your editing:
+
+#### Drawing Status Indicators
+- **🟡 Orange Elements**: Drawing in progress, more points needed
+- **🟢 Green Elements**: Valid drawing ready to finish
+- **Real-time Counter**: Shows current points vs. minimum required
+- **Status Overlay**: Displays drawing progress and keyboard shortcuts
+
+#### Error Notifications
+- **Auto-dismiss**: Error messages appear in the top-right corner
+- **Clear Actions**: Click the X button or wait 5 seconds for auto-dismissal
+- **Helpful Messages**: Specific guidance on what went wrong and how to fix it
+
+#### Loading States
+- **Data Operations**: Loading overlay appears during API calls
+- **Progress Feedback**: Visual indication when saving or loading data
+- **Smooth Transitions**: Optimistic updates with automatic rollback on failures
+
+### Input Validation
+
+#### Coordinate Bounds
+- **Range**: All coordinates must be between -1024 and +1024
+- **Auto-correction**: Invalid coordinates are automatically clamped to valid range
+- **Visual Indicators**: Invalid inputs are highlighted in red
+
+#### Drawing Requirements
+- **Polygons**: Minimum 3 points required
+- **Paths**: Minimum 2 points required
+- **Real-time Validation**: Immediate feedback on drawing validity
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| **S** | Switch to Select tool |
+| **P** | Switch to Point tool |
+| **G** | Switch to Polygon tool |
+| **L** | Switch to Linestring tool |
+| **Enter** | Finish current drawing |
+| **Escape** | Cancel drawing or clear selection |
 
 ## 💾 Saving and Committing
 

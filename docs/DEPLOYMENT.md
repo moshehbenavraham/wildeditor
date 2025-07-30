@@ -2,6 +2,20 @@
 
 This guide covers deployment procedures, environment setup, and configuration for the Luminari Wilderness Editor.
 
+## 🚀 Quick Start Deployments
+
+### Frontend → Netlify (Current)
+1. Connect GitHub repository to Netlify
+2. Build command: `npm run build`
+3. Publish directory: `dist` 
+4. Set environment variables from `.env.production.example`
+
+### Backend → Coolify (Current Express)
+1. Connect repository, select `docker-compose` build pack
+2. Use `docker-compose.prod.yml`  
+3. Set environment variables: `FRONTEND_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
+4. Deploy automatically with health checks
+
 ## 🚀 Deployment Overview
 
 ### Deployment Architecture
@@ -121,14 +135,63 @@ LOG_LEVEL=INFO
 
 ### Netlify Deployment
 
+#### Required Netlify Environment Variables
+
+Set these in **Netlify Dashboard** → **Site configuration** → **Environment variables**:
+
+```bash
+# Required for production build
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=https://your-backend-api-url/api
+
+# Application settings  
+VITE_APP_NAME=Luminari Wilderness Editor
+VITE_ENVIRONMENT=production
+VITE_ENABLE_DEBUG=false
+VITE_ENABLE_ANALYTICS=true
+```
+
+#### Required GitHub Repository Secrets
+
+Set these in **GitHub Repository** → **Settings** → **Secrets and variables** → **Actions**:
+
+```bash
+# Netlify deployment secrets
+NETLIFY_AUTH_TOKEN=your_netlify_personal_access_token
+NETLIFY_PROD_SITE_ID=your_netlify_site_id
+
+# Slack notifications (for CI/CD pipeline)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+
+# Supabase secrets (for GitHub Actions builds)
+PROD_SUPABASE_URL=your_production_supabase_url
+PROD_SUPABASE_ANON_KEY=your_production_supabase_anon_key
+PROD_API_URL=https://your-backend-api-url/api
+```
+
+#### How to Find Netlify Values:
+
+**1. Netlify Auth Token:**
+- Go to https://app.netlify.com/user/applications#personal-access-tokens
+- Click **New access token**
+- Name it "GitHub Actions" and generate
+- Copy immediately (you won't see it again)
+
+**2. Netlify Site ID:**
+- In your site dashboard: **Site configuration** → **General**
+- Scroll to **Project information** 
+- Copy the **Site ID** (format: abc123def-456g-789h-012i-jklmnopqrstu)
+
 #### netlify.toml
 ```toml
 [build]
-  publish = "dist"
+  publish = "apps/frontend/dist"
   command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 [[redirects]]
   from = "/api/*"
@@ -140,11 +203,21 @@ LOG_LEVEL=INFO
   to = "/index.html"
   status = 200
 
-[context.production.environment]
-  VITE_API_URL = "https://api.wildeditor.luminari.com"
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.com"
 
-[context.deploy-preview.environment]
-  VITE_API_URL = "https://staging-api.wildeditor.luminari.com"
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 ```
 
 #### Deployment Steps
@@ -255,6 +328,51 @@ echo "Deployment complete!"
 ```
 
 ## 🖥️ Backend Deployment
+
+### Coolify Deployment (Recommended for Current Express Backend)
+
+#### Option 1: Docker Compose (Recommended)
+
+**Setup:**
+1. **Connect Repository**: Add your Git repository to Coolify
+2. **Build Pack**: Select `docker-compose`
+3. **Compose File**: Use `docker-compose.prod.yml`
+4. **Environment Variables**: Set these in Coolify dashboard:
+   ```
+   FRONTEND_URL=https://your-frontend-domain.com
+   SUPABASE_URL=your_production_supabase_url
+   SUPABASE_SERVICE_KEY=your_production_supabase_service_role_key
+   ```
+
+**Features:**
+- Multi-stage Docker build for optimized production images
+- Built-in health checks at `/api/health`
+- Auto-restart with `unless-stopped` policy
+- Proper container networking and security
+
+#### Option 2: Simple Dockerfile
+1. **Build Pack**: Select `dockerfile`
+2. **Dockerfile Location**: `./Dockerfile`
+3. **Same Environment Variables** as Docker Compose
+
+#### Option 3: Nixpacks Auto-Detection
+1. **Build Pack**: Select `nixpacks`
+2. **Auto-detected Commands**: `npm run build` and `npm start`
+3. **Port**: 3001 (auto-detected)
+
+**Deployment Process:**
+Coolify automatically:
+- Installs monorepo dependencies correctly
+- Builds only the backend workspace  
+- Starts Express server with proper health monitoring
+- Handles CORS, networking, and container management
+
+**Pre-Deployment Checklist:**
+- [ ] Production Supabase project created
+- [ ] Database tables created (run `database-setup.sql`)
+- [ ] Service role key obtained from Supabase
+- [ ] Frontend domain configured for CORS
+- [ ] Environment variables set in Coolify
 
 ### Docker Deployment
 
