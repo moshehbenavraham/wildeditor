@@ -12,7 +12,8 @@
   },
   "scripts": {
     "lint": "echo 'No linting configured for shared package - types only'",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "echo 'No tests configured for shared package - types only' && exit 0"
   },
   "devDependencies": {
     "typescript": "^5.5.3"

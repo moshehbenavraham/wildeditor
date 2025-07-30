@@ -10,7 +10,8 @@
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "echo 'No tests configured yet' && exit 0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
