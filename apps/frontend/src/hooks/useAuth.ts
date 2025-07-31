@@ -36,7 +36,17 @@ export const useAuth = () => {
     if (!supabase) {
       console.error('🔴🔴🔴 AUTHENTICATION ATTEMPT FAILED - SUPABASE NOT CONFIGURED 🔴🔴🔴')
       console.error('Check the browser console for configuration instructions')
-      return { data: null, error: new Error('Supabase not configured') }
+      
+      // Check if we have specific config errors
+      const configError = (window as any).__SUPABASE_CONFIG_ERROR__;
+      const configErrors = (window as any).__SUPABASE_CONFIG_ERRORS__ || [];
+      
+      if (configError && configErrors.length > 0) {
+        const errorMessage = `Supabase configuration error: ${configErrors.join(', ')}. Please contact the administrator to configure the authentication system.`;
+        return { data: null, error: new Error(errorMessage) }
+      }
+      
+      return { data: null, error: new Error('Authentication system not configured. Please contact the administrator.') }
     }
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -52,7 +62,17 @@ export const useAuth = () => {
     if (!supabase) {
       console.error('🔴🔴🔴 AUTHENTICATION ATTEMPT FAILED - SUPABASE NOT CONFIGURED 🔴🔴🔴')
       console.error('Check the browser console for configuration instructions')
-      return { data: null, error: new Error('Supabase not configured') }
+      
+      // Check if we have specific config errors
+      const configError = (window as any).__SUPABASE_CONFIG_ERROR__;
+      const configErrors = (window as any).__SUPABASE_CONFIG_ERRORS__ || [];
+      
+      if (configError && configErrors.length > 0) {
+        const errorMessage = `Supabase configuration error: ${configErrors.join(', ')}. Please contact the administrator to configure the authentication system.`;
+        return { data: null, error: new Error(errorMessage) }
+      }
+      
+      return { data: null, error: new Error('Authentication system not configured. Please contact the administrator.') }
     }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

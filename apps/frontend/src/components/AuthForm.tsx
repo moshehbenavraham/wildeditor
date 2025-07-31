@@ -104,6 +104,7 @@ export const AuthForm: React.FC = () => {
                 className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Enter your email"
                 required
+                autoComplete="email"
               />
             </div>
           </div>
@@ -122,6 +123,7 @@ export const AuthForm: React.FC = () => {
                 placeholder="Enter your password"
                 required
                 minLength={6}
+                autoComplete={isSignUp ? "new-password" : "current-password"}
               />
             </div>
           </div>

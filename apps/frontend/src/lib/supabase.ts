@@ -24,6 +24,24 @@ ${messages.map(msg => `  ❌ ${msg}`).join('\n')}
 // Check for common misconfigurations
 const configErrors: string[] = []
 
+// Debug: Log raw values to see if they're actually masked
+console.log('RAW ENV VALUES:', {
+  url: import.meta.env.VITE_SUPABASE_URL,
+  urlLength: import.meta.env.VITE_SUPABASE_URL?.length,
+  urlType: typeof import.meta.env.VITE_SUPABASE_URL,
+  key: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  keyLength: import.meta.env.VITE_SUPABASE_ANON_KEY?.length,
+  keyType: typeof import.meta.env.VITE_SUPABASE_ANON_KEY
+})
+
+// Test if values are actually masked strings
+if (supabaseUrl && supabaseUrl.includes('*')) {
+  configErrors.push(`VITE_SUPABASE_URL appears to be masked: "${supabaseUrl}"`)
+}
+if (supabaseAnonKey && supabaseAnonKey.includes('*')) {
+  configErrors.push(`VITE_SUPABASE_ANON_KEY appears to be masked: "${supabaseAnonKey}"`)
+}
+
 if (!supabaseUrl) {
   configErrors.push('VITE_SUPABASE_URL is NOT SET')
 } else if (supabaseUrl === 'your_supabase_project_url') {
