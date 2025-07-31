@@ -144,7 +144,7 @@ jobs:
         
       - name: Deploy to Netlify (Production)
         run: |
-          netlify deploy --prod --dir apps/frontend/dist --site ${{ secrets.NETLIFY_PROD_SITE_ID }} --message "Deploy from GitHub Actions (production)"
+          netlify deploy --prod --filter @wildeditor/frontend --site ${{ secrets.NETLIFY_PROD_SITE_ID }} --message "Deploy from GitHub Actions (production)"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PROD_SITE_ID }}

@@ -4,7 +4,7 @@
   command = "VITE_SUPABASE_URL=$VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY npm run build"
   
   # Publish directory - Vite's default output directory for the frontend
-  publish = "apps/frontend/dist"
+  publish = "dist"
   
   # Node.js version
   NODE_VERSION = "18"
