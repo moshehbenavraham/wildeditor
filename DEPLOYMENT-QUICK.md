@@ -1,6 +1,9 @@
 # Quick Deployment Reference
 
-For complete deployment instructions, see **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+## 📚 Complete Documentation
+- **[Main Deployment Guide](docs/DEPLOYMENT.md)** - Overview and architecture
+- **[Frontend Deployment](docs/frontend/DEPLOYMENT_FRONTEND.md)** - React/TypeScript deployment
+- **[Backend Deployment](docs/backend/DEPLOYMENT_BACKEND.md)** - Python FastAPI deployment
 
 ## Frontend → Netlify
 ```bash
@@ -30,4 +33,7 @@ SUPABASE_SERVICE_KEY=your_supabase_service_role_key
 - `.coolify.yml` - Coolify configuration hints
 - `.env.production.example` - Environment template
 
-**📖 Full Guide**: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+---
+
+**📖 Full Guides**: 
+- [Main Guide](docs/DEPLOYMENT.md) | [Frontend](docs/frontend/DEPLOYMENT_FRONTEND.md) | [Backend](docs/backend/DEPLOYMENT_BACKEND.md)
