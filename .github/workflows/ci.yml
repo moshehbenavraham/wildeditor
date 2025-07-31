@@ -63,9 +63,9 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:8000/api' }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_URL: 'http://localhost:8000/api'
+          # Supabase credentials are only available in production environment
+          # The production deployment job will build with the actual credentials
           
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -161,12 +161,43 @@ jobs:
       - name: Install Netlify CLI
         run: npm install -g netlify-cli
         
+      - name: Debug environment secrets
+        run: |
+          echo "Checking if environment secrets are accessible..."
+          echo "SUPABASE_URL is set: ${{ secrets.SUPABASE_URL != '' }}"
+          echo "SUPABASE_ANON_KEY is set: ${{ secrets.SUPABASE_ANON_KEY != '' }}"
+          echo "Using production environment: ${{ github.event.deployment.environment || 'production' }}"
+          echo "Note: These will be exposed as VITE_ prefixed variables during build"
+          
+      - name: Clean previous build artifacts
+        run: |
+          echo "Cleaning any previous build artifacts to ensure fresh production build..."
+          rm -rf apps/frontend/dist
+          
       - name: Build production
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.PROD_API_URL || 'https://api.wildeditor.luminari.com' }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          
+      - name: Verify build environment variables
+        run: |
+          echo "Checking if environment variables were properly embedded in build..."
+          if grep -q "supabase.co" apps/frontend/dist/assets/*.js 2>/dev/null; then
+            echo "✅ Found Supabase URL in build files"
+          else
+            echo "❌ Supabase URL not found in build files - environment variables may not be set correctly"
+          fi
+          
+          echo "Checking for masked values (asterisks)..."
+          if grep -q "\*\*\*\*\*\*\*\*" apps/frontend/dist/assets/*.js 2>/dev/null; then
+            echo "⚠️  WARNING: Found asterisk patterns in build files - possible masked secrets!"
+            echo "This indicates environment variables may have been masked during build"
+            exit 1
+          else
+            echo "✅ No masked values found in build files"
+          fi
           
       - name: Deploy to Netlify
         run: |
