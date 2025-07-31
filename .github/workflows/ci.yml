@@ -101,7 +101,8 @@ jobs:
           
       - name: Deploy preview
         run: |
-          netlify deploy --dir=apps/frontend/dist --message="PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+          cd apps/frontend
+          netlify deploy --dir=dist --site=${{ secrets.NETLIFY_PROD_SITE_ID }} --auth=${{ secrets.NETLIFY_AUTH_TOKEN }} --message="PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PROD_SITE_ID }}
@@ -170,7 +171,8 @@ jobs:
           
       - name: Deploy to Netlify
         run: |
-          netlify deploy --prod --dir=apps/frontend/dist --message="Production deploy from ${{ github.sha }}"
+          cd apps/frontend
+          netlify deploy --prod --dir=dist --site=${{ secrets.NETLIFY_PROD_SITE_ID }} --auth=${{ secrets.NETLIFY_AUTH_TOKEN }} --message="Production deploy from ${{ github.sha }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PROD_SITE_ID }}

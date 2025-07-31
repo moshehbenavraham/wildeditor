@@ -1,12 +1,12 @@
 [build]
   # Base directory - where Netlify runs the build command
-  base = ""
+  base = "apps/frontend"
   
   # Build command - builds the frontend workspace
-  command = "cd ../.. && npm run build"
+  command = "npm run build --workspace=@wildeditor/frontend"
   
   # Publish directory - Vite's default output directory for the frontend
-  publish = "apps/frontend/dist"
+  publish = "dist"
   
   # Node.js version
   NODE_VERSION = "18"
