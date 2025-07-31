@@ -212,9 +212,21 @@ if __name__ == "__main__":
     # Run basic tests manually for development
     import sys
     import os
+    from pathlib import Path
     
     # Set up paths and environment
-    sys.path.insert(0, '../src')
+    current_dir = Path(__file__).parent
+    backend_dir = current_dir.parent  # apps/backend directory
+    src_dir = backend_dir / "src"
+    
+    # Add parent directory first (so 'src' can be imported as a module)
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    # Also add src directory for direct imports
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+    
     os.environ["MYSQL_DATABASE_URL"] = "mysql+pymysql://test:test@localhost:3306/test_db"
     
     from fastapi.testclient import TestClient

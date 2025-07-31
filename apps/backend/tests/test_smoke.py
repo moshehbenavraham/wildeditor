@@ -5,14 +5,30 @@ These tests focus on basic functionality without database dependencies
 import pytest
 import os
 import sys
+from pathlib import Path
 
 # Set up environment before imports
 os.environ["MYSQL_DATABASE_URL"] = "mysql+pymysql://test:test@localhost:3306/test_db"
 
+# Ensure proper path setup for imports
+def setup_import_paths():
+    """Set up import paths for both local and CI environments"""
+    current_dir = Path(__file__).parent
+    backend_dir = current_dir.parent  # apps/backend directory
+    src_dir = backend_dir / "src"
+    
+    # Add parent directory first (so 'src' can be imported as a module)
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    # Also add src directory for direct imports
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+
 def test_imports():
     """Test that basic imports work"""
     try:
-        sys.path.insert(0, 'src')
+        setup_import_paths()
         import src.main
         import src.schemas.region
         import src.schemas.path
@@ -22,21 +38,21 @@ def test_imports():
 
 def test_region_constants():
     """Test that region constants are defined"""
-    sys.path.insert(0, 'src')
+    setup_import_paths()
     from src.schemas.region import REGION_GEOGRAPHIC, REGION_ENCOUNTER
     assert REGION_GEOGRAPHIC == 1
     assert REGION_ENCOUNTER == 2
 
 def test_path_constants():
     """Test that path constants are defined"""
-    sys.path.insert(0, 'src')
+    setup_import_paths()
     from src.schemas.path import PATH_TYPES
     assert isinstance(PATH_TYPES, dict)
     assert len(PATH_TYPES) > 0
 
 def test_fastapi_app_creation():
     """Test that FastAPI app can be created"""
-    sys.path.insert(0, 'src')
+    setup_import_paths()
     from src.main import app
     assert app is not None
     assert hasattr(app, 'routes')
@@ -44,7 +60,7 @@ def test_fastapi_app_creation():
 @pytest.mark.unit
 def test_health_endpoint():
     """Test the health endpoint without database"""
-    sys.path.insert(0, 'src')
+    setup_import_paths()
     from fastapi.testclient import TestClient
     from src.main import app
     
