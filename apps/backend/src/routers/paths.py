@@ -120,6 +120,84 @@ def get_paths(
             detail=f"Error retrieving paths: {str(e)}"
         )
 
+@router.get("/types", response_model=dict)
+def get_path_types():
+    """
+    Get all available path types and sector mappings for the wilderness system.
+    
+    Returns complete information about path types, their typical sector usage,
+    and how they integrate with the terrain generation system.
+    """
+    return {
+        "path_types": {
+            PATH_ROAD: {
+                "name": "Paved Road",
+                "description": "High-speed travel routes that provide fast movement",
+                "path_props_usage": "Road sector type (typically 11,12,13)",
+                "behavior": "Overrides terrain with road sectors, enables fast travel",
+                "examples": ["Imperial Highway (sector 11)", "Trade Route (sector 12)", "Main Street (sector 13)"]
+            },
+            PATH_DIRT_ROAD: {
+                "name": "Dirt Road",
+                "description": "Standard travel routes with moderate speed", 
+                "path_props_usage": "Dirt road sector type (typically 26,27,28)",
+                "behavior": "Lightweight path that provides improved travel",
+                "examples": ["Forest path (sector 26)", "Desert track (sector 27)", "Mountain trail (sector 28)"]
+            },
+            PATH_RIVER: {
+                "name": "River",
+                "description": "Major waterways for boat travel or terrain features",
+                "path_props_usage": "Water sector type (6=swim, 7=no-swim, 36=river)",
+                "behavior": "Creates water terrain along the path",
+                "examples": ["Navigable river (sector 6)", "Rapids (sector 7)", "Stream (sector 36)"]
+            },
+            PATH_STREAM: {
+                "name": "Stream", 
+                "description": "Minor waterways and small water features",
+                "path_props_usage": "Stream sector type (typically 36=river)",
+                "behavior": "Creates minor water features",
+                "examples": ["Mountain stream", "Creek", "Small brook"]
+            },
+            PATH_GEOGRAPHIC: {
+                "name": "Geographic Feature",
+                "description": "Natural linear formations and boundaries",
+                "path_props_usage": "Terrain preservation or specific sector override",
+                "behavior": "Marks geographic boundaries without necessarily changing terrain",
+                "examples": ["Ridge line", "Valley floor", "Natural boundary"]
+            }
+        },
+        "path_width_system": {
+            "description": "Path width determines area of effect around the path centerline",
+            "calculation": "Path affects all coordinates within width distance of centerline",
+            "examples": {
+                "width=1": "Affects single-coordinate trail",
+                "width=2": "Affects 3-coordinate wide road (center + 1 each side)",
+                "width=3": "Affects 5-coordinate wide highway"
+            }
+        },
+        "coordinate_system": {
+            "range": {"x": "-1024 to +1024", "y": "-1024 to +1024"},
+            "origin": "(0,0) at map center",
+            "directions": {"north": "+Y", "south": "-Y", "east": "+X", "west": "-X"}
+        },
+        "processing_order": [
+            "1. Calculate base terrain from elevation",
+            "2. Apply region effects first (if any)",
+            "3. Get enclosing paths for coordinate using spatial query", 
+            "4. Apply path effects (override with path_props sector type)",
+            "5. Determine appropriate glyph based on path orientation",
+            "6. Return final sector type and glyph information"
+        ],
+        "glyph_system": {
+            "description": "Paths use orientation-based glyphs for visual display",
+            "types": {
+                "NS": "North-South oriented path glyph",
+                "EW": "East-West oriented path glyph", 
+                "Intersection": "Where paths cross or meet"
+            }
+        }
+    }
+
 @router.get("/{vnum}", response_model=PathResponse)
 def get_path(vnum: int, db: Session = Depends(get_db)):
     """
@@ -313,72 +391,3 @@ def delete_path(vnum: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting path: {str(e)}"
         )
-
-@router.get("/types", response_model=dict)
-def get_path_types():
-    """
-    Get all available path types and sector mappings for the wilderness system.
-    
-    Returns complete information about path types, their typical sector usage,
-    and how they integrate with the terrain generation system.
-    """
-    return {
-        "path_types": {
-            PATH_ROAD: {
-                "name": "Paved Road",
-                "description": "High-speed travel routes that provide fast movement",
-                "path_props_usage": "Road sector type (typically 11,12,13)",
-                "common_sectors": [11, 12, 13],
-                "examples": ["King's Highway", "Trade Route", "Military Road"]
-            },
-            PATH_DIRT_ROAD: {
-                "name": "Dirt Road", 
-                "description": "Standard travel routes for rural areas",
-                "path_props_usage": "Dirt road sector type (typically 26,27,28)",
-                "common_sectors": [26, 27, 28], 
-                "examples": ["Village Path", "Farm Road", "Logging Trail"]
-            },
-            PATH_GEOGRAPHIC: {
-                "name": "Geographic Feature",
-                "description": "Natural linear formations in the landscape",
-                "path_props_usage": "Appropriate terrain sector type for the feature",
-                "examples": ["Mountain Ridge", "Valley Floor", "Cliff Edge"]
-            },
-            PATH_RIVER: {
-                "name": "River",
-                "description": "Major waterways that affect movement and terrain",
-                "path_props_usage": "Water sector type (typically 6,7,36)",
-                "common_sectors": [6, 7, 36],
-                "examples": ["Great River", "Rapids", "Mighty Current"]
-            },
-            PATH_STREAM: {
-                "name": "Stream",
-                "description": "Minor waterways and small creeks", 
-                "path_props_usage": "Shallow water sector type (typically 6,36)",
-                "common_sectors": [6, 36],
-                "examples": ["Mountain Stream", "Creek", "Brook"]
-            }
-        },
-        "sector_mapping": PATH_SECTOR_MAPPING,
-        "coordinate_system": {
-            "range": {"x": "-1024 to +1024", "y": "-1024 to +1024"},
-            "linestring_format": "LINESTRING(x1 y1, x2 y2, x3 y3, ...)",
-            "directions": {"north": "+Y", "south": "-Y", "east": "+X", "west": "-X"}
-        },
-        "processing_flow": [
-            "1. Calculate base terrain using Perlin noise",
-            "2. Apply region effects first (if any)",
-            "3. Get enclosing paths for coordinate using spatial query", 
-            "4. Apply path effects (override with path_props sector type)",
-            "5. Determine appropriate glyph based on path orientation",
-            "6. Return final sector type and glyph information"
-        ],
-        "glyph_system": {
-            "description": "Paths use orientation-based glyphs for visual display",
-            "types": {
-                "NS": "North-South oriented path glyph",
-                "EW": "East-West oriented path glyph", 
-                "Intersection": "Where paths cross or meet"
-            }
-        }
-    }

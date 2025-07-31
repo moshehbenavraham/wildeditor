@@ -5,11 +5,17 @@ pymysql
 pydantic
 python-dotenv
 cryptography  # Required for pymysql with some MySQL versions
+geoalchemy2  # For spatial data types (POLYGON, LINESTRING)
 
 # Production dependencies
 gunicorn  # Production WSGI server
 requests  # For health checks
 python-multipart  # For file uploads if needed
+
+# Testing dependencies
+pytest
+pytest-asyncio
+httpx  # For async testing with FastAPI
 
 # Optional monitoring and logging
 sentry-sdk[fastapi]  # Error tracking

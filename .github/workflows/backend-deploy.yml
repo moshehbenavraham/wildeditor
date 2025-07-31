@@ -62,24 +62,24 @@ jobs:
       - name: Test with pytest
         run: |
           cd apps/backend
-          # Create a basic test if none exist
-          mkdir -p tests
-          if [ ! -f tests/test_main.py ]; then
-            cat > tests/test_main.py << 'EOF'
-          from fastapi.testclient import TestClient
+          
+          # Install test dependencies
+          pip install pytest pytest-asyncio httpx
+          
+          # Run unit tests only (skip integration tests that require database)
+          PYTHONPATH=src pytest tests/ -v -m "not integration" --tb=short
+          
+          # Run a basic smoke test to ensure the app can start
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
           from src.main import app
-          
+          from fastapi.testclient import TestClient
           client = TestClient(app)
-          
-          def test_health_check():
-              response = client.get("/api/health")
-              assert response.status_code == 200
-              assert "status" in response.json()
-          EOF
-          fi
-          
-          # Run tests
-          PYTHONPATH=. pytest tests/ -v
+          response = client.get('/api/health')
+          assert response.status_code == 200
+          print('✅ Smoke test passed - API starts correctly')
+          "
           
       - name: Security check with bandit
         run: |
@@ -140,16 +140,16 @@ jobs:
       - name: Output image digest
         run: echo ${{ steps.build.outputs.digest }}
 
-  # Deploy to production server
-  deploy-production:
-    name: Deploy to Production
+  # Deploy to development server
+  deploy-development:
+    name: Deploy to Development
     runs-on: ubuntu-latest
     needs: [test-backend, build-image]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     environment:
-      name: production
-      url: https://api.wildeditor.luminari.com
+      name: development
+      url: http://api.wildeditor.luminari.com
       
     steps:
       - name: Checkout code
@@ -197,7 +197,16 @@ jobs:
             --name $CONTAINER_NAME \
             --restart unless-stopped \
             -p 8000:8000 \
-            --env-file /opt/wildeditor-backend/.env.production \
+            -e MYSQL_DATABASE_URL="${MYSQL_DATABASE_URL}" \
+            -e ENVIRONMENT="development" \
+            -e DEBUG="true" \
+            -e PORT="8000" \
+            -e FRONTEND_URL="http://localhost:5173" \
+            -e LOG_LEVEL="DEBUG" \
+            -e WORKERS="2" \
+            -e ENABLE_DOCS="true" \
+            -v /var/log/wildeditor:/var/log/wildeditor \
+            $DOCKER_IMAGE
             -v /var/log/wildeditor:/var/log/wildeditor \
             $DOCKER_IMAGE
           
@@ -234,17 +243,17 @@ jobs:
           sleep 10
           
           # Test the deployed API
-          curl -f https://api.wildeditor.luminari.com/api/health || exit 1
-          echo "✅ Production deployment verified!"
+          curl -f http://api.wildeditor.luminari.com/api/health || exit 1
+          echo "✅ Development deployment verified!"
           
       - name: Create deployment notification
         uses: actions/github-script@v7
         with:
           script: |
             const output = `#### 🚀 Backend Deployment Successful!\n
-            - **Environment**: Production
+            - **Environment**: Development
             - **Version**: \`${{ github.sha }}\`
-            - **API URL**: https://api.wildeditor.luminari.com
+            - **API URL**: http://api.wildeditor.luminari.com
             - **Health Check**: ✅ Passing
             - **Deployed by**: @${{ github.actor }}
             

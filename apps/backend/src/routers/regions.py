@@ -159,6 +159,54 @@ def get_regions(
             detail=f"Error retrieving regions: {str(e)}"
         )
 
+@router.get("/types", response_model=dict)
+def get_region_types():
+    """
+    Get all available region types and sector types for the wilderness system.
+    
+    Returns complete information about how each region type affects terrain generation
+    and the valid sector types for REGION_SECTOR regions.
+    """
+    return {
+        "region_types": {
+            REGION_GEOGRAPHIC: {
+                "name": "Geographic (Named areas and landmarks)",
+                "description": "Provides contextual information for the dynamic description engine without modifying terrain. Used for naming terrain areas, geo-political boundaries, and landmarks",
+                "region_props_usage": "Value ignored by game",
+                "behavior": "No terrain modification, enhances descriptions and provides area context",
+                "examples": ["Whispering Wood (area naming)", "Kingdom of Thay (geo-political)", "North Gate of Ashenport (landmark)"]
+            },
+            REGION_ENCOUNTER: {
+                "name": "Encounter (Special spawning)", 
+                "description": "Special encounter zones where specific encounters can spawn",
+                "region_props_usage": "Value ignored by game",
+                "behavior": "Enables encounter spawning with optional reset timers",
+                "examples": ["Dragon Lair Territory", "Bandit Ambush Zone", "Monster Hunting Grounds"]
+            },
+            REGION_SECTOR_TRANSFORM: {
+                "name": "Sector Transform (Elevation adjustment)",
+                "description": "Terrain modification regions that adjust elevation values", 
+                "region_props_usage": "Elevation adjustment value (positive or negative integer)",
+                "behavior": "Adds region_props to elevation, then recalculates sector type",
+                "examples": ["Magical uplift zone (+50)", "Cursed depression (-30)", "Earthquake damage (-20)"]
+            },
+            REGION_SECTOR: {
+                "name": "Sector Override (Complete terrain override)",
+                "description": "Complete terrain override regions",
+                "region_props_usage": "Sector type ID (0-36) from sector_types array", 
+                "behavior": "Completely replaces calculated terrain type with specified sector",
+                "examples": ["Road through forest (sector 11)", "Lake in desert (sector 6)", "City district (sector 1)"]
+            }
+        },
+        "sector_types": SECTOR_TYPES,
+        "coordinate_system": {
+            "range": {"x": "-1024 to +1024", "y": "-1024 to +1024"},
+            "origin": "(0,0) at map center",
+            "directions": {"north": "+Y", "south": "-Y", "east": "+X", "west": "-X"}
+        },
+        "processing_order": "Regions processed in database order - later regions override earlier ones"
+    }
+
 @router.get("/{vnum}", response_model=RegionResponse)
 def get_region(vnum: int, db: Session = Depends(get_db)):
     """Get a specific region by vnum"""
@@ -390,51 +438,3 @@ def delete_region(vnum: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting region: {str(e)}"
         )
-
-@router.get("/types", response_model=dict)
-def get_region_types():
-    """
-    Get all available region types and sector types for the wilderness system.
-    
-    Returns complete information about how each region type affects terrain generation
-    and the valid sector types for REGION_SECTOR regions.
-    """
-    return {
-        "region_types": {
-            REGION_GEOGRAPHIC: {
-                "name": "Geographic (Named areas and landmarks)",
-                "description": "Provides contextual information for the dynamic description engine without modifying terrain. Used for naming terrain areas, geo-political boundaries, and landmarks",
-                "region_props_usage": "Value ignored by game",
-                "behavior": "No terrain modification, enhances descriptions and provides area context",
-                "examples": ["Whispering Wood (area naming)", "Kingdom of Thay (geo-political)", "North Gate of Ashenport (landmark)"]
-            },
-            REGION_ENCOUNTER: {
-                "name": "Encounter (Special spawning)", 
-                "description": "Special encounter zones where specific encounters can spawn",
-                "region_props_usage": "Value ignored by game",
-                "behavior": "Enables encounter spawning with optional reset timers",
-                "examples": ["Dragon Lair Territory", "Bandit Ambush Zone", "Monster Hunting Grounds"]
-            },
-            REGION_SECTOR_TRANSFORM: {
-                "name": "Sector Transform (Elevation adjustment)",
-                "description": "Terrain modification regions that adjust elevation values", 
-                "region_props_usage": "Elevation adjustment value (positive or negative integer)",
-                "behavior": "Adds region_props to elevation, then recalculates sector type",
-                "examples": ["Magical uplift zone (+50)", "Cursed depression (-30)", "Earthquake damage (-20)"]
-            },
-            REGION_SECTOR: {
-                "name": "Sector Override (Complete terrain override)",
-                "description": "Complete terrain override regions",
-                "region_props_usage": "Sector type ID (0-36) from sector_types array", 
-                "behavior": "Completely replaces calculated terrain type with specified sector",
-                "examples": ["Road through forest (sector 11)", "Lake in desert (sector 6)", "City district (sector 1)"]
-            }
-        },
-        "sector_types": SECTOR_TYPES,
-        "coordinate_system": {
-            "range": {"x": "-1024 to +1024", "y": "-1024 to +1024"},
-            "origin": "(0,0) at map center",
-            "directions": {"north": "+Y", "south": "-Y", "east": "+X", "west": "-X"}
-        },
-        "processing_order": "Regions processed in database order - later regions override earlier ones"
-    }

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.dialects.mysql import LINESTRING
+from geoalchemy2 import Geometry
 from ..config.config_database import Base
 
 class Path(Base):
@@ -24,4 +24,4 @@ class Path(Base):
     path_type = Column(Integer, nullable=False)  # Path type (see PATH_* constants)
     name = Column(String(50), nullable=False)   # Path name (50 char limit from real DB)
     path_props = Column(Integer, nullable=True)  # Additional properties (nullable in real DB)
-    path_linestring = Column(LINESTRING, nullable=True)  # MySQL spatial linestring (nullable)
+    path_linestring = Column(Geometry('LINESTRING'), nullable=True)  # MySQL spatial linestring (nullable)
