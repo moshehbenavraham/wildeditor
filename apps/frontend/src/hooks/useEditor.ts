@@ -69,9 +69,6 @@ export const useEditor = () => {
   const setTool = useCallback((tool: DrawingTool) => {
     setState(prev => {
       // If we're currently drawing and switching tools, we need to clean up
-      if (prev.isDrawing && prev.tool !== tool) {
-        console.log('Switching tools during drawing - cleaning up drawing state');
-      }
       
       return { 
         ...prev, 
