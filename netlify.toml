@@ -8,6 +8,9 @@
   
   # Node.js version
   NODE_VERSION = "18"
+  
+  # Disable build cache
+  ignore_cache = true
 
 [build.environment]
   # Enable npm workspaces
