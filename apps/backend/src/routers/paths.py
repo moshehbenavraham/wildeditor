@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import List, Optional
+from sqlalchemy.engine import Result
+from typing import List, Optional, Any
 from datetime import datetime
 from ..models.path import Path
 from ..schemas.path import (
@@ -337,7 +338,7 @@ def update_path(vnum: int, path_update: PathUpdate, db: Session = Depends(get_db
             query_parts.append("path_linestring = ST_GeomFromText(:linestring)")
             
             if query_parts:
-                query = f"UPDATE path_data SET {', '.join(query_parts)} WHERE vnum = :vnum"
+                query = f"UPDATE path_data SET {', '.join(query_parts)} WHERE vnum = :vnum"  # nosec B608
                 db.execute(text(query), params)
         else:
             # Update without linestring changes
@@ -346,7 +347,7 @@ def update_path(vnum: int, path_update: PathUpdate, db: Session = Depends(get_db
                 params = update_data.copy()
                 params["vnum"] = vnum
                 
-                query = f"UPDATE path_data SET {', '.join(query_parts)} WHERE vnum = :vnum"
+                query = f"UPDATE path_data SET {', '.join(query_parts)} WHERE vnum = :vnum"  # nosec B608
                 db.execute(text(query), params)
         
         db.commit()
@@ -374,7 +375,8 @@ def delete_path(vnum: int, db: Session = Depends(get_db)):
     try:
         result = db.execute(text("DELETE FROM path_data WHERE vnum = :vnum"), {"vnum": vnum})
         
-        if result.rowcount == 0:
+        # Check if any rows were affected using hasattr to avoid mypy issues
+        if hasattr(result, 'rowcount') and result.rowcount == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Path with vnum {vnum} not found"

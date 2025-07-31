@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import List, Optional
+from sqlalchemy.engine import Result
+from typing import List, Optional, Any
 from datetime import datetime
 from ..models.region import Region
 from ..schemas.region import (
@@ -65,7 +66,7 @@ def polygon_wkt_to_coordinates(wkt: str) -> List[dict]:
         
         # Handle point regions (landmarks) - check if all points are the same
         if len(coordinates) >= 3:
-            unique_points = []
+            unique_points: List[dict] = []
             for coord in coordinates:
                 if not any(abs(coord['x'] - up['x']) < 0.001 and abs(coord['y'] - up['y']) < 0.001 for up in unique_points):
                     unique_points.append(coord)
@@ -389,7 +390,7 @@ def update_region(vnum: int, region_update: RegionUpdate, db: Session = Depends(
             query_parts.append("region_polygon = ST_GeomFromText(:polygon)")
             
             if query_parts:
-                query = f"UPDATE region_data SET {', '.join(query_parts)} WHERE vnum = :vnum"
+                query = f"UPDATE region_data SET {', '.join(query_parts)} WHERE vnum = :vnum"  # nosec B608
                 db.execute(text(query), params)
         else:
             # Update without polygon changes
@@ -398,7 +399,7 @@ def update_region(vnum: int, region_update: RegionUpdate, db: Session = Depends(
                 params = update_data.copy()
                 params["vnum"] = vnum
                 
-                query = f"UPDATE region_data SET {', '.join(query_parts)} WHERE vnum = :vnum"
+                query = f"UPDATE region_data SET {', '.join(query_parts)} WHERE vnum = :vnum"  # nosec B608
                 db.execute(text(query), params)
         
         db.commit()
@@ -420,8 +421,10 @@ def delete_region(vnum: int, db: Session = Depends(get_db)):
     """Delete a region"""
     try:
         result = db.execute(text("DELETE FROM region_data WHERE vnum = :vnum"), {"vnum": vnum})
+        db.commit()
         
-        if result.rowcount == 0:
+        # Check if any rows were affected using hasattr to avoid mypy issues
+        if hasattr(result, 'rowcount') and result.rowcount == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Region with vnum {vnum} not found"

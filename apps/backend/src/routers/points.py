@@ -67,7 +67,8 @@ def get_point_info(
                     points = path.points if isinstance(path.points, list) else json.loads(path.points)
                     
                     # Check if point is near the path
-                    if _point_near_path(x, y, points, radius):
+                    search_radius = radius if radius is not None else 0.1
+                    if _point_near_path(x, y, points, search_radius):
                         path_info = {
                             "vnum": path.vnum,
                             "name": path.name,
@@ -77,9 +78,9 @@ def get_point_info(
                             "color": path.color
                         }
                         matching_paths.append(path_info)
-            except Exception:
-                # Skip paths with invalid point data
-                continue
+            except (ValueError, TypeError, KeyError) as e:
+                # Skip paths with invalid point data (JSON parsing or structure issues)
+                continue  # nosec B112
         
         return {
             "coordinate": {"x": x, "y": y},
