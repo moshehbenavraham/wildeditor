@@ -18,6 +18,16 @@
   
   # Disable secrets scanning for Vite environment variables (they're meant to be public)
   SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_ANON_KEY,VITE_SUPABASE_URL"
+  
+  # Disable Netlify's build cache
+  NETLIFY_USE_YARN = "false"
+  NETLIFY_SKIP_GATSBY_BUILD_PLUGIN = "true"
+  
+  # Force clean installs
+  CI = "true"
+  
+  # Additional cache control
+  NODE_ENV = "production"
 
 # Redirect rules for SPA (Single Page Application)
 # This handles client-side routing for React Router
