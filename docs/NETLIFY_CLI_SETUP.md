@@ -48,6 +48,12 @@ You need to set up the following secrets in your GitHub repository:
 - name: Install Netlify CLI
   run: npm install -g netlify-cli
   
+- name: Link to Netlify site
+  run: |
+    netlify link --id ${{ secrets.NETLIFY_PROD_SITE_ID }}
+  env:
+    NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+  
 - name: Deploy to Netlify (Production)
   run: |
     netlify deploy --build --prod --message "Deploy from GitHub Actions (production)"
@@ -56,6 +62,11 @@ You need to set up the following secrets in your GitHub repository:
     NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PROD_SITE_ID }}
     # Environment variables are passed here
 ```
+
+The workflow now:
+1. Installs Netlify CLI
+2. Links the repository to your Netlify site using the site ID
+3. Runs the deployment which respects your `netlify.toml` configuration
 
 ## Verification
 
