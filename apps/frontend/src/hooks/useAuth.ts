@@ -34,6 +34,8 @@ export const useAuth = () => {
 
   const signUp = async (email: string, password: string) => {
     if (!supabase) {
+      console.error('🔴🔴🔴 AUTHENTICATION ATTEMPT FAILED - SUPABASE NOT CONFIGURED 🔴🔴🔴')
+      console.error('Check the browser console for configuration instructions')
       return { data: null, error: new Error('Supabase not configured') }
     }
     const { data, error } = await supabase.auth.signUp({
@@ -48,6 +50,8 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
+      console.error('🔴🔴🔴 AUTHENTICATION ATTEMPT FAILED - SUPABASE NOT CONFIGURED 🔴🔴🔴')
+      console.error('Check the browser console for configuration instructions')
       return { data: null, error: new Error('Supabase not configured') }
     }
     const { data, error } = await supabase.auth.signInWithPassword({
