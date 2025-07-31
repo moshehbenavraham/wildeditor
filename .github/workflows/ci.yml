@@ -129,18 +129,22 @@ jobs:
           npm cache clean --force
           npm ci
         
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.PROD_API_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          VITE_ENVIRONMENT: production
+          VITE_ENABLE_DEBUG: false
+          VITE_ENABLE_ANALYTICS: true
+          
       - name: Install Netlify CLI
         run: npm install -g netlify-cli
         
-      - name: Link to Netlify site
-        run: |
-          netlify link --id ${{ secrets.NETLIFY_PROD_SITE_ID }}
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        
       - name: Deploy to Netlify (Production)
         run: |
-          netlify deploy --build --prod --message "Deploy from GitHub Actions (production)"
+          netlify deploy --prod --dir apps/frontend/dist --site ${{ secrets.NETLIFY_PROD_SITE_ID }} --message "Deploy from GitHub Actions (production)"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PROD_SITE_ID }}
