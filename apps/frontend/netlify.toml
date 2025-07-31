@@ -1,6 +1,7 @@
 [build]
   # Directory to publish (relative to this netlify.toml location)
   publish = "dist"
+  environment = { SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY" }
 
 # SPA redirect rule for React Router
 [[redirects]]
