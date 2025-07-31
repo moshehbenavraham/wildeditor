@@ -3,7 +3,7 @@ import http from 'http';
 
 const options = {
   hostname: 'localhost',
-  port: 3001,
+  port: 8000,
   path: '/api/health',
   method: 'GET'
 };

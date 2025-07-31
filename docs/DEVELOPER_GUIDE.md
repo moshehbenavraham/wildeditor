@@ -109,7 +109,7 @@ wildeditor/
 
 3. **Start development servers** (both frontend and backend)
    ```bash
-   npm run dev  # Starts both frontend (:5173) and backend (:3001)
+   npm run dev  # Starts both frontend (:5173) and backend (:8000)
    ```
 
 4. **Open in browser**
@@ -123,7 +123,7 @@ npm run dev
 
 # Start individual services
 npm run dev:frontend  # Frontend only (:5173)
-npm run dev:backend   # Backend only (:3001)
+npm run dev:backend   # Backend only (:8000)
 
 # Build all packages
 npm run build

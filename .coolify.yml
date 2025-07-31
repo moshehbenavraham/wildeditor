@@ -5,11 +5,11 @@ services:
   wildeditor-backend:
     build_command: "npm run build"
     start_command: "npm start"
-    port: 3001
+    port: 8000
     healthcheck: "/api/health"
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=8000
     volumes:
       - type: bind
         source: ./logs
@@ -30,5 +30,5 @@ required_env:
 
 # Optional environment variables with defaults
 optional_env:
-  PORT: 3001
+  PORT: 8000
   NODE_ENV: production

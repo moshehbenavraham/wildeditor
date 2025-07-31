@@ -6,16 +6,16 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${PORT:-3001}:3001"
+      - "${PORT:-8000}:8000"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - PORT=${PORT:-3001}
+      - PORT=${PORT:-8000}
       - FRONTEND_URL=${FRONTEND_URL}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

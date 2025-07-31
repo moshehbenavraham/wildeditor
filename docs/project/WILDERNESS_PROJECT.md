@@ -113,7 +113,7 @@ This architecture ensures:
   - Health check endpoint
   - Graceful handling of missing Supabase config
 - **Location**: `apps/backend/`
-- **Port**: 3001
+- **Port**: 8000
 - **Environment**: Dotenv for configuration
 
 #### Shared Package ✅ IMPLEMENTED
@@ -388,13 +388,13 @@ The frontend communicates with the Express backend via these RESTful endpoints:
 3. **Configure environment**
    - Create `apps/frontend/.env`:
      ```
-     VITE_API_URL=http://localhost:3001/api
+     VITE_API_URL=http://localhost:8000/api
      VITE_SUPABASE_URL=your_supabase_url
      VITE_SUPABASE_ANON_KEY=your_anon_key
      ```
    - Create `apps/backend/.env`:
      ```
-     PORT=3001
+     PORT=8000
      NODE_ENV=development
      SUPABASE_URL=your_supabase_url
      SUPABASE_SERVICE_KEY=your_service_key
@@ -413,8 +413,8 @@ The frontend communicates with the Express backend via these RESTful endpoints:
 
 6. **Access the application**
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3001/api
-   - Health check: http://localhost:3001/api/health
+   - Backend API: http://localhost:8000/api
+   - Health check: http://localhost:8000/api/health
 
 ### Available Scripts
 - `npm run dev` - Start all services
