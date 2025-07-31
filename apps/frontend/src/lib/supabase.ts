@@ -64,8 +64,10 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here`, 'background: #003300; color: #00ff00
   console.groupEnd()
   
   // Set a global flag for the auth form to check
-  (window as any).__SUPABASE_CONFIG_ERROR__ = true
-  (window as any).__SUPABASE_CONFIG_ERRORS__ = configErrors
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(window as any).__SUPABASE_CONFIG_ERROR__ = true
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(window as any).__SUPABASE_CONFIG_ERRORS__ = configErrors
 }
 
 // Original debug logging
