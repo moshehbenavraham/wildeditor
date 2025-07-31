@@ -1,0 +1,12 @@
+{
+  "cache": {
+    "ignore": true,
+    "cleanInstall": true
+  },
+  "environment": {
+    "CI": "true",
+    "NETLIFY_USE_YARN": "false",
+    "NETLIFY_SKIP_GATSBY_BUILD_PLUGIN": "true",
+    "NODE_ENV": "production"
+  }
+}

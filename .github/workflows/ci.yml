@@ -26,7 +26,9 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm cache clean --force
+          npm ci
         
       - name: Run ESLint
         run: npm run lint
@@ -50,7 +52,9 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm cache clean --force
+          npm ci
         
       - name: Run tests
         run: npm test
@@ -87,7 +91,9 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm cache clean --force
+          npm ci
         
       - name: Run security audit
         run: npm audit --audit-level=high
@@ -118,7 +124,9 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm cache clean --force
+          npm ci
         
       - name: Build for staging
         run: npm run build
@@ -163,7 +171,9 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm cache clean --force
+          npm ci
         
       - name: Build for production
         run: npm run build
