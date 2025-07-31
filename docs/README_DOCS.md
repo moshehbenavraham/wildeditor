@@ -49,6 +49,13 @@ Welcome to the Luminari Wilderness Editor documentation! This directory contains
   - Security configuration and monitoring
   - CI/CD pipeline setup
 
+- **[CI/CD Guide](frontend/CI_CD_GUIDE.md)** - Complete CI/CD pipeline documentation
+  - GitHub Actions workflow configuration
+  - Performance optimizations and caching
+  - Security scanning and deployment gates
+  - Troubleshooting and maintenance procedures
+  - Best practices and advanced configurations
+
 ## 🚀 Quick Start
 
 ### For Users

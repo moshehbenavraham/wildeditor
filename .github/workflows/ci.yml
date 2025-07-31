@@ -170,8 +170,8 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PROD_SITE_ID }}
           VITE_API_URL: ${{ secrets.PROD_API_URL || 'https://api.wildeditor.luminari.com' }}
-          VITE_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
