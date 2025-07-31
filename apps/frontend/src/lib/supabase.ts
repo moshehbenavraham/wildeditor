@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 // Debug logging to check what's actually loaded
 console.log('🔍 Supabase Config Debug:', {
@@ -18,8 +18,18 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_project_u
   console.warn('⚠️  Running in demo mode - authentication will not work')
 }
 
+// Validate URL before creating client
+const isValidUrl = (url: string) => {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
 // Create a dummy client if credentials are not set - this prevents runtime errors
-export const supabase = (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'your_supabase_project_url')
+export const supabase = (supabaseUrl && supabaseAnonKey && isValidUrl(supabaseUrl) && supabaseUrl !== 'your_supabase_project_url')
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
