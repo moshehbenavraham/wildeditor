@@ -90,11 +90,11 @@ class TestPathsAPI:
 class TestPointsAPI:
     """Test the points API endpoints"""
     
-    def test_get_points_endpoint_exists(self, test_client):
-        """Test that points endpoint exists (may fail without DB)"""
-        response = test_client.get("/api/points")
-        # Should return 200, 422, or 500 depending on DB connection
-        assert response.status_code in [200, 422, 500]
+    def test_get_points(self, test_client):
+        """Test getting point information with coordinates"""
+        response = test_client.get("/api/points?x=100&y=100")
+        # Should return 200 even if empty, or 500 if DB not connected
+        assert response.status_code in [200, 500]  # 500 if DB not connected
 
 
 # Mock database tests
@@ -175,48 +175,6 @@ class TestDataValidation:
         assert len(PATH_TYPES) > 0
 
 
-if __name__ == "__main__":
-    # Run basic tests manually
-    import sys
-    sys.path.insert(0, '../src')
-    
-    from fastapi.testclient import TestClient
-    from src.main import app
-    
-    client = TestClient(app)
-    
-    print("Running basic API tests...")
-    
-    # Test health check
-    response = client.get("/api/health")
-    assert response.status_code == 200
-    print("✅ Health check passed!")
-    
-    # Test docs
-    response = client.get("/docs")
-    assert response.status_code == 200
-    print("✅ API docs accessible!")
-    
-    print("✅ All basic tests passed!")
-    """Test the paths API endpoints"""
-    
-    def test_get_paths(self):
-        """Test getting all paths"""
-        response = client.get("/api/paths")
-        # Should return 200 even if empty
-        assert response.status_code in [200, 500]  # 500 if DB not connected
-
-
-class TestPointsAPI:
-    """Test the points API endpoints"""
-    
-    def test_get_points(self, test_client):
-        """Test getting point information with coordinates"""
-        response = test_client.get("/api/points?x=100&y=100")
-        # Should return 200 even if empty, or 500 if DB not connected
-        assert response.status_code in [200, 500]  # 500 if DB not connected
-
-
 # Integration tests (require database connection)
 @pytest.mark.integration
 class TestDatabaseIntegration:
@@ -251,8 +209,30 @@ class TestDatabaseIntegration:
 
 
 if __name__ == "__main__":
-    # Run basic tests
+    # Run basic tests manually for development
+    import sys
+    import os
+    
+    # Set up paths and environment
+    sys.path.insert(0, '../src')
+    os.environ["MYSQL_DATABASE_URL"] = "mysql+pymysql://test:test@localhost:3306/test_db"
+    
+    from fastapi.testclient import TestClient
+    from src.main import app
+    
+    client = TestClient(app)
+    
     print("Running basic API tests...")
-    test_health_check()
-    test_api_docs_accessible()
+    
+    # Test health check
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    print("✅ Health check passed!")
+    
+    # Test docs
+    response = client.get("/docs")
+    assert response.status_code == 200
+    print("✅ API docs accessible!")
+    
+    print("✅ All basic tests passed!")
     print("✅ Basic tests passed!")

@@ -63,9 +63,6 @@ jobs:
         run: |
           cd apps/backend
           
-          # Install test dependencies
-          pip install pytest pytest-asyncio httpx
-          
           # Run unit tests only (skip integration tests that require database)
           PYTHONPATH=src pytest tests/ -v -m "not integration" --tb=short
           
@@ -73,11 +70,15 @@ jobs:
           python -c "
           import sys
           sys.path.insert(0, 'src')
+          import os
+          os.environ['MYSQL_DATABASE_URL'] = 'mysql+pymysql://test:test@localhost:3306/test_db'
           from src.main import app
           from fastapi.testclient import TestClient
           client = TestClient(app)
           response = client.get('/api/health')
           assert response.status_code == 200
+          print('✅ Smoke test passed: API is responding')
+          "
           print('✅ Smoke test passed - API starts correctly')
           "
           

@@ -6,12 +6,17 @@ from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch
 import os
 import sys
+from pathlib import Path
 
 # Set test environment variable BEFORE importing any modules
 os.environ["MYSQL_DATABASE_URL"] = "mysql+pymysql://test:test@localhost:3306/test_db"
 
 # Add the src directory to the Python path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# This works for both local development and CI environments
+current_dir = Path(__file__).parent
+src_dir = current_dir.parent / "src"
+if str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 
 @pytest.fixture
