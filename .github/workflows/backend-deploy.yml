@@ -172,7 +172,14 @@ jobs:
           
       - name: Add server to known hosts
         run: |
-          ssh-keyscan -t rsa ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          
+      - name: Test SSH connection
+        run: |
+          echo "Testing SSH connection to ${{ secrets.PRODUCTION_HOST }}..."
+          ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} "echo 'SSH connection successful'"
           
       - name: Deploy to production server
         run: |
@@ -191,6 +198,9 @@ jobs:
           # Create app directory if it doesn't exist
           sudo mkdir -p $APP_DIR
           cd $APP_DIR
+          
+          # Login to GitHub Container Registry
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
           # Pull latest image
           echo "📦 Pulling latest Docker image..."
@@ -215,8 +225,6 @@ jobs:
             -e LOG_LEVEL="DEBUG" \
             -e WORKERS="2" \
             -e ENABLE_DOCS="true" \
-            -v /var/log/wildeditor:/var/log/wildeditor \
-            $DOCKER_IMAGE
             -v /var/log/wildeditor:/var/log/wildeditor \
             $DOCKER_IMAGE
           
@@ -244,8 +252,11 @@ jobs:
           EOF
           
           # Copy and execute deployment script
-          scp deploy.sh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }}:/tmp/
-          ssh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} "chmod +x /tmp/deploy.sh && /tmp/deploy.sh"
+          echo "Copying deployment script to server..."
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=30 deploy.sh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }}:/tmp/
+          
+          echo "Executing deployment script on server..."
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} "chmod +x /tmp/deploy.sh && /tmp/deploy.sh"
           
       - name: Verify deployment
         run: |
