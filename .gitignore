@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Environment files - NEVER commit these!
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+apps/backend/.env*
+*.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
