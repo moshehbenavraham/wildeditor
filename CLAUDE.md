@@ -339,7 +339,7 @@ For comprehensive information beyond this technical overview, refer to:
 
 ### Essential Documentation
 - **[README.md](README.md)** - Project overview, quick start, and complete documentation map
-- **[SETUP.md](SETUP.md)** - Detailed setup instructions
+- **[docs/SETUP.md](docs/SETUP.md)** - Detailed setup instructions
 - **[docs/README_DOCS.md](docs/README_DOCS.md)** - Documentation index and organization guide
 - **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Full development guide and best practices
 - **[docs/API.md](docs/API.md)** - Complete API reference and examples

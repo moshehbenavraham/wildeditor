@@ -2,7 +2,7 @@
 
 A **production-ready** full-stack monorepo application for creating and managing wilderness regions, paths, and landmarks in the LuminariMUD game world. Built with React/TypeScript frontend, Python FastAPI backend, and integrated with LuminariMUD's MySQL spatial databases.
 
-> ✅ **System Status**: **STABLE** - Major stability and performance improvements completed. System confidence level: **85%**
+> ✅ **System Status**: **EARLY DEVELOPMENT**
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-blue.svg)
@@ -127,7 +127,7 @@ wildeditor/
 
 ### 🚀 Getting Started
 - **[User Guide](docs/USER_GUIDE.md)** - How to use the wilderness editor interface and tools
-- **[Setup Guide](SETUP.md)** - Quick start installation and configuration
+- **[Setup Guide](docs/SETUP.md)** - Quick start installation and configuration
 - **[Documentation Index](docs/README_DOCS.md)** - Complete documentation organization and guide
 
 ### 👩‍💻 Development

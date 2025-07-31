@@ -5,8 +5,8 @@ This guide covers frontend-specific deployment procedures for the React/TypeScri
 > **Related Documentation:**
 > - 📚 [Main Deployment Guide](../DEPLOYMENT.md) - Overview and shared configurations
 > - 🖥️ [Backend Deployment](../backend/DEPLOYMENT_BACKEND.md) - Backend-specific deployment
-> - 🚀 [Quick Deployment Reference](../../DEPLOYMENT-QUICK.md) - Command cheat sheet
-> - 🛠️ [Setup Guide](../../SETUP.md) - Local development setup
+> - 🚀 [Quick Deployment Reference](../DEPLOYMENT-QUICK.md) - Command cheat sheet
+> - 🛠️ [Setup Guide](../SETUP.md) - Local development setup
 
 ## 🎨 Frontend Technology Stack
 
@@ -19,6 +19,8 @@ This guide covers frontend-specific deployment procedures for the React/TypeScri
 
 ## 🚀 Quick Start - Frontend Deployment
 
+> **Important**: The frontend expects the backend API to be running on port 8000. Update VITE_API_URL accordingly.
+
 ### Netlify Deployment
 ```bash
 # Build command
@@ -29,8 +31,9 @@ apps/frontend/dist
 
 # Environment variables required:
 VITE_API_URL=https://api.wildeditor.luminari.com
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Optional - only if using Supabase authentication:
+VITE_SUPABASE_URL=your_supabase_url  # Optional
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key  # Optional
 ```
 
 ### Vercel Deployment
@@ -44,26 +47,12 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ### Frontend Environment Variables (.env.production)
 ```bash
-# API Configuration
+# API Configuration (Backend runs on port 8000)
 VITE_API_URL=https://api.wildeditor.luminari.com
-VITE_WS_URL=wss://api.wildeditor.luminari.com/ws
 
-# Authentication (optional)
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-
-# Feature Flags
-VITE_ENABLE_DEBUG=false
-VITE_ENABLE_ANALYTICS=true
-
-# Application Settings
-VITE_APP_NAME=Luminari Wilderness Editor
-VITE_ENVIRONMENT=production
-
-# Map Configuration
-VITE_MAP_BASE_URL=https://maps.wildeditor.luminari.com
-VITE_DEFAULT_ZOOM=1
-VITE_MAX_ZOOM=4
+# Authentication (optional - app runs in demo mode without these)
+VITE_SUPABASE_URL=https://your-project.supabase.co  # Optional
+VITE_SUPABASE_ANON_KEY=your-anon-key  # Optional
 ```
 
 ## 📦 Build Process
@@ -92,7 +81,14 @@ The Vite build process automatically:
 
 ### Netlify Deployment (Recommended)
 
-#### netlify.toml Configuration
+The repository includes a `_redirects` file in `apps/frontend/public/` for SPA routing:
+```
+/* /index.html 200
+```
+
+#### netlify.toml Configuration (Example)
+
+> **Note**: This file doesn't exist in the repository. You can create it for more advanced configuration:
 ```toml
 [build]
   base = "."
@@ -140,11 +136,9 @@ The Vite build process automatically:
 2. Add the following:
 ```bash
 VITE_API_URL=https://api.wildeditor.luminari.com
-VITE_SUPABASE_URL=your_production_supabase_url
-VITE_SUPABASE_ANON_KEY=your_production_anon_key
-VITE_APP_NAME=Luminari Wilderness Editor
-VITE_ENVIRONMENT=production
-VITE_ENABLE_DEBUG=false
+# Optional Supabase configuration:
+VITE_SUPABASE_URL=your_production_supabase_url  # Optional
+VITE_SUPABASE_ANON_KEY=your_production_anon_key  # Optional
 ```
 
 **Deploy Settings**:
@@ -173,7 +167,9 @@ netlify deploy --prod --dir=apps/frontend/dist
 
 ### Vercel Deployment
 
-#### vercel.json Configuration
+#### vercel.json Configuration (Example)
+
+> **Note**: This file doesn't exist in the repository. Create it if deploying to Vercel:
 ```json
 {
   "buildCommand": "npm run build",
@@ -356,28 +352,8 @@ jobs:
 ## 🔒 Security Configuration
 
 ### Content Security Policy
-```javascript
-// vite.config.ts
-export default defineConfig({
-  // ... other config
-  html: {
-    cspNonce: true,
-    csp: {
-      'default-src': ["'self'"],
-      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      'style-src': ["'self'", "'unsafe-inline'"],
-      'img-src': ["'self'", "data:", "https:"],
-      'font-src': ["'self'", "data:"],
-      'connect-src': [
-        "'self'",
-        "https://*.supabase.co",
-        "https://api.wildeditor.luminari.com",
-        "wss://api.wildeditor.luminari.com"
-      ]
-    }
-  }
-})
-```
+
+> **Note**: CSP configuration can be added to your deployment platform's headers. The current vite.config.ts doesn't include CSP settings.
 
 ### Environment Variable Security
 - Never commit `.env` files to version control
@@ -388,28 +364,8 @@ export default defineConfig({
 ## 📊 Performance Optimization
 
 ### Build Optimizations
-```javascript
-// vite.config.ts
-export default defineConfig({
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': ['lucide-react'],
-        }
-      }
-    },
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
-  }
-})
-```
+
+The current vite.config.ts uses default optimization settings. For production deployments, you can add custom optimizations as needed.
 
 ### Asset Optimization
 ```bash
@@ -441,7 +397,10 @@ function App() {
 
 ## 🔄 CI/CD Pipeline
 
-### GitHub Actions - Frontend Deployment
+### GitHub Actions - Frontend Deployment (Example)
+
+> **Note**: No GitHub Actions workflows currently exist. This is an example you can use:
+
 ```yaml
 name: Deploy Frontend
 

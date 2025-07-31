@@ -187,7 +187,7 @@ export const useEditor = () => {
         currentDrawing: [...prev.currentDrawing, coordinate]
       }));
     }
-  }, [state.tool, points.length, selectItem, session?.access_token]);
+  }, [state.tool, state.isDrawing, state.currentDrawing.length, points.length, selectItem, session?.access_token]);
 
   const cancelDrawing = useCallback(() => {
     console.log('[Drawing] Canceling drawing:', {

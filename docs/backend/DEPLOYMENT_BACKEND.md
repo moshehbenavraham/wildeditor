@@ -5,8 +5,8 @@ This guide covers backend-specific deployment procedures for the Python FastAPI 
 > **Related Documentation:**
 > - 📚 [Main Deployment Guide](../DEPLOYMENT.md) - Overview and shared configurations
 > - 🎨 [Frontend Deployment](../frontend/DEPLOYMENT_FRONTEND.md) - Frontend-specific deployment
-> - 🚀 [Quick Deployment Reference](../../DEPLOYMENT-QUICK.md) - Command cheat sheet
-> - 🛠️ [Setup Guide](../../SETUP.md) - Local development setup
+> - 🚀 [Quick Deployment Reference](../DEPLOYMENT-QUICK.md) - Command cheat sheet
+> - 🛠️ [Setup Guide](../SETUP.md) - Local development setup
 
 ## 🖥️ Backend Technology Stack
 

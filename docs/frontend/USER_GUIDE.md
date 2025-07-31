@@ -130,7 +130,6 @@ The editor consists of three main areas:
 5. **Complete the polygon** by double-clicking or pressing Enter
 6. **Fill in details** in the info panel:
    - Name
-   - Zone number
    - Properties
 7. **Save your work** using the Save button
 
@@ -148,7 +147,6 @@ The editor consists of three main areas:
 5. **Complete the path** by double-clicking or pressing Enter
 6. **Fill in details** in the info panel:
    - Name
-   - Zone number
    - Properties
 7. **Save your work** using the Save button
 
@@ -289,18 +287,6 @@ The editor automatically validates polygons:
 - **Closure**: Automatically closes polygons
 - **Auto-fix**: Offers to fix common issues
 
-### Bulk Operations
-
-#### Multi-select
-- **Hold Ctrl/Cmd**: Click multiple features to select them
-- **Drag selection**: Draw a box to select multiple features
-- **Select all**: Use Ctrl+A to select all visible features
-
-#### Bulk Actions
-- **Move**: Drag selected features to move them together
-- **Delete**: Remove multiple features at once
-- **Properties**: Change properties for multiple features
-- **Zone assignment**: Move features between zones
 
 ### Keyboard Shortcuts
 
@@ -310,14 +296,9 @@ The editor automatically validates polygons:
 | `P` | Point tool |
 | `G` | Polygon tool |
 | `L` | Linestring tool |
-| `Ctrl+S` | Save session |
-| `Ctrl+Enter` | Commit changes |
-| `Ctrl+Z` | Undo |
-| `Ctrl+Y` | Redo |
-| `Delete` | Delete selected |
+| `Enter` | Finish drawing |
 | `Escape` | Cancel current action |
-| `+/-` | Zoom in/out |
-| `Arrow keys` | Pan map |
+| Mouse wheel | Zoom in/out |
 
 ## 🚨 Troubleshooting
 

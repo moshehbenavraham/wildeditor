@@ -7,8 +7,8 @@ This guide provides an overview of deployment procedures for the Luminari Wilder
 ### Specialized Deployment Guides
 - 🎨 **[Frontend Deployment Guide](./frontend/DEPLOYMENT_FRONTEND.md)** - React/TypeScript frontend deployment
 - 🖥️ **[Backend Deployment Guide](./backend/DEPLOYMENT_BACKEND.md)** - Python FastAPI backend deployment
-- 🚀 **[Quick Deployment Reference](../DEPLOYMENT-QUICK.md)** - Command cheat sheet for experienced developers
-- 🛠️ **[Setup Guide](../SETUP.md)** - Local development environment setup
+- 🚀 **[Quick Deployment Reference](./DEPLOYMENT-QUICK.md)** - Command cheat sheet for experienced developers
+- 🛠️ **[Setup Guide](./SETUP.md)** - Local development environment setup
 
 ## 🏗️ Architecture Overview
 
@@ -226,4 +226,4 @@ jobs:
 > **For detailed deployment instructions**, please refer to:
 > - 🎨 [Frontend Deployment Guide](./frontend/DEPLOYMENT_FRONTEND.md) for React/TypeScript frontend
 > - 🖥️ [Backend Deployment Guide](./backend/DEPLOYMENT_BACKEND.md) for Python FastAPI backend
-> - 🚀 [Quick Reference](../DEPLOYMENT-QUICK.md) for command cheat sheet
+> - 🚀 [Quick Reference](./DEPLOYMENT-QUICK.md) for command cheat sheet
