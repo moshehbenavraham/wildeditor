@@ -270,12 +270,12 @@ jobs:
   notify:
     name: Notify Deployment Status
     runs-on: ubuntu-latest
-    needs: [deploy-production]
+    needs: [deploy-development]
     if: always() && github.ref == 'refs/heads/main'
     
     steps:
       - name: Notify Slack on Success
-        if: needs.deploy-production.result == 'success'
+        if: needs.deploy-development.result == 'success'
         uses: 8398a7/action-slack@v3
         with:
           status: success
@@ -284,10 +284,10 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           
       - name: Notify Slack on Failure
-        if: needs.deploy-production.result == 'failure'
+        if: needs.deploy-development.result == 'failure'
         uses: 8398a7/action-slack@v3
         with:
           status: failure
-          text: '❌ Wildeditor Backend deployment to production failed!'
+          text: '❌ Wildeditor Backend deployment to development failed!'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
