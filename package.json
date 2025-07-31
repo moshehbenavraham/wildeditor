@@ -60,5 +60,8 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
-  "packageManager": "npm@11.4.1"
+  "packageManager": "npm@11.4.1",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.53.0"
+  }
 }
