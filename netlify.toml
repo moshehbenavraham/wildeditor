@@ -1,6 +1,7 @@
 [build]
   # Build command - builds the frontend workspace
-  command = "npm run build"
+  # Explicitly set environment variables during build
+  command = "VITE_SUPABASE_URL=$VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY npm run build"
   
   # Publish directory - Vite's default output directory for the frontend
   publish = "apps/frontend/dist"
