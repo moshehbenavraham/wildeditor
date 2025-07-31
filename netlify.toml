@@ -1,6 +1,6 @@
 [build]
-  # Build command - builds the frontend workspace
-  command = "npm run build"
+  # Build command - builds the frontend workspace with explicit directory
+  command = "cd apps/frontend && npm run build"
   
   # Publish directory - Vite's default output directory for the frontend
   publish = "apps/frontend/dist"
