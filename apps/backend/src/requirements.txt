@@ -1,7 +1,16 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 pymysql
 pydantic
 python-dotenv
 cryptography  # Required for pymysql with some MySQL versions
+
+# Production dependencies
+gunicorn  # Production WSGI server
+requests  # For health checks
+python-multipart  # For file uploads if needed
+
+# Optional monitoring and logging
+sentry-sdk[fastapi]  # Error tracking
+prometheus-client  # Metrics collection

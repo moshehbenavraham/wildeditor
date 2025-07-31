@@ -1,0 +1,284 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/backend/**'
+      - '.github/workflows/backend-deploy.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/backend/**'
+
+env:
+  PYTHON_VERSION: '3.11'
+  DOCKER_IMAGE: 'wildeditor-backend'
+  REGISTRY: 'ghcr.io'
+
+jobs:
+  # Test and lint the Python backend
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('apps/backend/src/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install dependencies
+        run: |
+          cd apps/backend/src
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx  # Testing dependencies
+          
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          # Stop build if there are Python syntax errors or undefined names
+          flake8 apps/backend/src --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Exit-zero treats all errors as warnings. GitHub editor is 127 chars wide
+          flake8 apps/backend/src --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          
+      - name: Type check with mypy
+        run: |
+          pip install mypy
+          mypy apps/backend/src --ignore-missing-imports || true
+          
+      - name: Test with pytest
+        run: |
+          cd apps/backend
+          # Create a basic test if none exist
+          mkdir -p tests
+          if [ ! -f tests/test_main.py ]; then
+            cat > tests/test_main.py << 'EOF'
+          from fastapi.testclient import TestClient
+          from src.main import app
+          
+          client = TestClient(app)
+          
+          def test_health_check():
+              response = client.get("/api/health")
+              assert response.status_code == 200
+              assert "status" in response.json()
+          EOF
+          fi
+          
+          # Run tests
+          PYTHONPATH=. pytest tests/ -v
+          
+      - name: Security check with bandit
+        run: |
+          pip install bandit
+          bandit -r apps/backend/src -f json -o bandit-report.json || true
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: |
+            bandit-report.json
+          retention-days: 7
+
+  # Build Docker image
+  build-image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test-backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Output image digest
+        run: echo ${{ steps.build.outputs.digest }}
+
+  # Deploy to production server
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [test-backend, build-image]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    environment:
+      name: production
+      url: https://api.wildeditor.luminari.com
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -t rsa ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Deploy to production server
+        run: |
+          # Create deployment script
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          echo "🚀 Starting deployment..."
+          
+          # Configuration
+          APP_DIR="/opt/wildeditor-backend"
+          DOCKER_IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE }}:latest"
+          CONTAINER_NAME="wildeditor-backend"
+          
+          # Create app directory if it doesn't exist
+          sudo mkdir -p $APP_DIR
+          cd $APP_DIR
+          
+          # Pull latest image
+          echo "📦 Pulling latest Docker image..."
+          sudo docker pull $DOCKER_IMAGE
+          
+          # Stop existing container
+          echo "🛑 Stopping existing container..."
+          sudo docker stop $CONTAINER_NAME || true
+          sudo docker rm $CONTAINER_NAME || true
+          
+          # Start new container
+          echo "🏃 Starting new container..."
+          sudo docker run -d \
+            --name $CONTAINER_NAME \
+            --restart unless-stopped \
+            -p 8000:8000 \
+            --env-file /opt/wildeditor-backend/.env.production \
+            -v /var/log/wildeditor:/var/log/wildeditor \
+            $DOCKER_IMAGE
+          
+          # Wait for container to be healthy
+          echo "🏥 Waiting for health check..."
+          for i in {1..30}; do
+            if sudo docker exec $CONTAINER_NAME python -c "import requests; requests.get('http://localhost:8000/api/health')" 2>/dev/null; then
+              echo "✅ Container is healthy!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ Container failed to become healthy"
+              sudo docker logs $CONTAINER_NAME
+              exit 1
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+          
+          # Cleanup old images
+          echo "🧹 Cleaning up old images..."
+          sudo docker image prune -f
+          
+          echo "🎉 Deployment completed successfully!"
+          EOF
+          
+          # Copy and execute deployment script
+          scp deploy.sh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }}:/tmp/
+          ssh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} "chmod +x /tmp/deploy.sh && /tmp/deploy.sh"
+          
+      - name: Verify deployment
+        run: |
+          # Wait a moment for the service to be fully ready
+          sleep 10
+          
+          # Test the deployed API
+          curl -f https://api.wildeditor.luminari.com/api/health || exit 1
+          echo "✅ Production deployment verified!"
+          
+      - name: Create deployment notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### 🚀 Backend Deployment Successful!\n
+            - **Environment**: Production
+            - **Version**: \`${{ github.sha }}\`
+            - **API URL**: https://api.wildeditor.luminari.com
+            - **Health Check**: ✅ Passing
+            - **Deployed by**: @${{ github.actor }}
+            
+            The backend is now live and ready to serve requests!`;
+            
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: '${{ github.sha }}',
+              body: output
+            })
+
+  # Notify deployment status
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always() && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Notify Slack on Success
+        if: needs.deploy-production.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: '🚀 Wildeditor Backend deployed successfully to production!'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Notify Slack on Failure
+        if: needs.deploy-production.result == 'failure'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: '❌ Wildeditor Backend deployment to production failed!'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
