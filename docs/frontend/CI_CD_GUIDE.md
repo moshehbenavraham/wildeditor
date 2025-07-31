@@ -1,4 +1,4 @@
-# MonoRepo
+# MonoRepo CI/CD
 
 ## The frontend CI/CD workflow:
 
@@ -16,6 +16,15 @@
   5. Notifications: Sends Slack notifications on deployment success/failure
 
   The frontend is deployed to Netlify automatically on main branch commits.
+
+## Netlify Monorepo Deployment
+
+**Key Points:**
+- Netlify CLI v16+ executes from workspace root (repository root)
+- Deploy commands use absolute paths: `netlify deploy --dir=apps/frontend/dist`
+- Must specify project with `--filter=@wildeditor/frontend` flag
+- `netlify.toml` lives in `apps/frontend/` (package directory)
+- No `cd` into subdirectories - paths are relative to repo root
 
 ## Files Involved in CI/CD Process
 
