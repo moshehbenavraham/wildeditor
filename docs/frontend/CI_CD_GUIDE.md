@@ -20,16 +20,17 @@
 ## Netlify Monorepo Deployment
 
 **Key Points:**
-- Netlify CLI v16+ executes from workspace root (repository root)
-- Deploy commands use absolute paths: `netlify deploy --dir=apps/frontend/dist`
-- Must specify project with `--filter=@wildeditor/frontend` flag
+- Netlify auto-detects monorepo and runs: `turbo run build --filter @wildeditor/frontend`
+- Build settings: Base `/`, Package `apps/frontend`, Publish `apps/frontend/dist`
 - `netlify.toml` lives in `apps/frontend/` (package directory)
-- No `cd` into subdirectories - paths are relative to repo root
+- Environment variables must NOT be marked as "Secret" in Netlify UI
+- `turbo.json` includes `env: ["VITE_*"]` for environment variable passing
 
 ## Files Involved in CI/CD Process
 
 - `.github/workflows/ci.yml` - Main CI/CD pipeline configuration
 - `apps/frontend/netlify.toml` - Netlify deployment configuration
+- `turbo.json` - Turborepo config with environment variable passing
 - `apps/frontend/package.json` - Build scripts and dependencies
 - `apps/frontend/dist/` - Build output directory (generated)
 - `package.json` - Root monorepo scripts for linting, type-checking, and building
@@ -53,7 +54,8 @@
 Environment variables are baked into the JavaScript bundle at build time:
 
 - `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-- Source: GitHub Environment Secrets (production) or Repository Secrets (other builds)
+- Source: Netlify Environment Variables (not marked as secrets)
 - Build process: Vite replaces `import.meta.env.VITE_*` with actual values
 - Result: Values hardcoded in compiled JS, not loaded at runtime
 - Security: Anon key is designed for public client-side use with RLS
+- Important: Do NOT mark these as "Secret" in Netlify or they'll be masked
