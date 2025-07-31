@@ -38,8 +38,8 @@ export const useAuth = () => {
       console.error('Check the browser console for configuration instructions')
       
       // Check if we have specific config errors
-      const configError = (window as any).__SUPABASE_CONFIG_ERROR__;
-      const configErrors = (window as any).__SUPABASE_CONFIG_ERRORS__ || [];
+      const configError = (window as unknown as { __SUPABASE_CONFIG_ERROR__?: boolean }).__SUPABASE_CONFIG_ERROR__;
+      const configErrors = (window as unknown as { __SUPABASE_CONFIG_ERRORS__?: string[] }).__SUPABASE_CONFIG_ERRORS__ || [];
       
       if (configError && configErrors.length > 0) {
         const errorMessage = `Supabase configuration error: ${configErrors.join(', ')}. Please contact the administrator to configure the authentication system.`;
@@ -64,8 +64,8 @@ export const useAuth = () => {
       console.error('Check the browser console for configuration instructions')
       
       // Check if we have specific config errors
-      const configError = (window as any).__SUPABASE_CONFIG_ERROR__;
-      const configErrors = (window as any).__SUPABASE_CONFIG_ERRORS__ || [];
+      const configError = (window as unknown as { __SUPABASE_CONFIG_ERROR__?: boolean }).__SUPABASE_CONFIG_ERROR__;
+      const configErrors = (window as unknown as { __SUPABASE_CONFIG_ERRORS__?: string[] }).__SUPABASE_CONFIG_ERRORS__ || [];
       
       if (configError && configErrors.length > 0) {
         const errorMessage = `Supabase configuration error: ${configErrors.join(', ')}. Please contact the administrator to configure the authentication system.`;
