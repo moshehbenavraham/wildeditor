@@ -1,6 +1,6 @@
 [build]
   # Base directory - where Netlify runs the build command
-  base = ""
+  base = "apps/frontend"
   
   # Build command - builds the frontend workspace
   command = "npm run build"
