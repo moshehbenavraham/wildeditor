@@ -181,6 +181,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
   const drawCurrentDrawing = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!state.isDrawing || state.currentDrawing.length === 0) return;
+    
+    console.log('[Canvas] Drawing current shape:', {
+      tool: state.tool,
+      points: state.currentDrawing.length
+    });
 
     const canvasCoords = state.currentDrawing.map(gameToCanvas);
     
@@ -300,10 +305,16 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.error('[Canvas] Canvas ref not available for rendering');
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      console.error('[Canvas] Failed to get 2D context');
+      return;
+    }
     
     // Set canvas internal resolution based on zoom
     canvas.width = canvasSize.width;
@@ -446,7 +457,14 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const handleClick = useCallback((e: React.MouseEvent) => {
     const gameCoord = canvasToGame(e.clientX, e.clientY);
     
+    console.log('[Canvas] Click event:', {
+      tool: state.tool,
+      coordinate: gameCoord,
+      mouseEvent: { clientX: e.clientX, clientY: e.clientY }
+    });
+    
     if (state.tool === 'select') {
+      console.log('[Canvas] Selection mode - checking for items at:', gameCoord);
       const POINT_SELECTION_RADIUS = 10; // pixels
       const PATH_SELECTION_TOLERANCE = 8; // game units
       
@@ -475,6 +493,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       });
 
       if (clickedPoint) {
+        console.log('[Canvas] Point selected:', {
+          point: clickedPoint.name,
+          id: clickedPoint.id,
+          coordinate: clickedPoint.coordinate
+        });
         onSelectItem(clickedPoint);
         return;
       }
@@ -486,6 +509,12 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       });
 
       if (clickedRegion) {
+        console.log('[Canvas] Region selected:', {
+          region: clickedRegion.name,
+          id: clickedRegion.id,
+          type: clickedRegion.type,
+          pointCount: clickedRegion.coordinates.length
+        });
         onSelectItem(clickedRegion);
         return;
       }
@@ -498,13 +527,22 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       });
 
       if (clickedPath) {
+        console.log('[Canvas] Path selected:', {
+          path: clickedPath.name,
+          id: clickedPath.id,
+          type: clickedPath.type,
+          pointCount: clickedPath.coordinates.length
+        });
         onSelectItem(clickedPath);
         return;
       }
 
       // No selection found
+      console.log('[Canvas] No item found at click position, clearing selection');
       onSelectItem(null);
     } else {
+      // Drawing tools
+      console.log('[Canvas] Passing click to drawing handler');
       onClick(gameCoord);
     }
   }, [state.tool, state.zoom, points, regions, paths, canvasToGame, gameToCanvas, onClick, onSelectItem, isPointInPolygon, distanceToPath]);

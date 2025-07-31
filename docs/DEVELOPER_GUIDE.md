@@ -7,17 +7,7 @@ This guide provides technical information for developers working on the Luminari
 ### System Architecture
 
 ```
-DEVELOPMENT:
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend API   │    │   Database      │
-│   (React/TS)    │◄──►│   (FastAPI)     │◄──►│   (Supabase)    │
-│                 │    │   (Python 3.8+) │    │   Development   │
-│ - Map Interface │    │ - Authentication│    │ - Spatial Data  │
-│ - Drawing Tools │    │ - CRUD Ops      │    │ - Region Tables │
-│ - State Mgmt    │    │ - OpenAPI Docs  │    │ - Path Tables   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
 
-PRODUCTION:
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │   Backend API   │    │ LuminariMUD     │
 │   (React/TS)    │◄──►│   (FastAPI)     │◄──►│   MySQL         │
