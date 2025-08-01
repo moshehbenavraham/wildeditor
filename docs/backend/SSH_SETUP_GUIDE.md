@@ -69,8 +69,33 @@ Add these secrets to your repository (Settings → Secrets and variables → Act
 3. **PRODUCTION_USER**
    ```
    wildedit
-   # or root, ubuntu, centos, etc. depending on your setup
    ```
+
+4. **MYSQL_DATABASE_URL** (Recommended - store database credentials securely)
+   ```
+   mysql+pymysql://username:password@host:port/database_name
+   # Example: mysql+pymysql://wildeditor:secretpassword@localhost:3306/wildeditor_db
+   ```
+
+5. **FRONTEND_URL** (Optional - for CORS configuration)
+   ```
+   https://your-frontend-domain.com
+   # Example: https://wildeditor.luminari.com
+   ```
+
+### Security Benefits of Using GitHub Secrets
+
+- **Encrypted storage**: Secrets are encrypted and only decrypted during workflow execution
+- **No server-side storage**: Database credentials never stored on the server filesystem
+- **Audit trail**: Changes to secrets are logged
+- **Access control**: Only authorized workflows can access secrets
+- **Environment isolation**: Different secrets for different environments (dev/staging/prod)
+
+### Important Notes
+
+- **Always use `wildedit` as your deployment user** - This guide assumes you've created the `wildedit` user as shown in the Server Setup section
+- **Test locally first** - Always verify SSH connection works locally before running CI/CD
+- **Use strong passwords** - Even though you're using SSH keys, set a strong password for the `wildedit` user account
 
 ## Server Requirements
 
@@ -151,7 +176,7 @@ If you're getting "Permission denied (publickey,password)" errors in GitHub Acti
 1. **Verify GitHub Secrets are set correctly:**
    - `PRODUCTION_SSH_KEY`: Contains the complete private key (including header/footer)
    - `PRODUCTION_HOST`: Your server's IP or domain
-   - `PRODUCTION_USER`: The correct username (e.g., `wildedit`, `ubuntu`, `root`)
+   - `PRODUCTION_USER`: Should be set to `wildedit`
 
 2. **Check the private key format in GitHub Secrets:**
    ```
@@ -194,7 +219,7 @@ ls -la ~/.ssh/
 
 ### Test connection with verbose output:
 ```bash
-ssh -v -i ~/.ssh/wildeditor_deploy user@server
+ssh -v -i ~/.ssh/wildeditor_deploy wildedit@your-server-ip
 ```
 
 ### Check server logs:
@@ -215,3 +240,46 @@ Add this debug step to your workflow to troubleshoot:
     echo "Testing connection with verbose output..."
     ssh -vvv -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} "echo 'test'" || true
 ```
+
+### Database Connection Issues
+
+If your container starts but fails health checks, it might be a database connection issue:
+
+1. **Test database connection format:**
+   ```bash
+   # The MYSQL_DATABASE_URL should be in this format:
+   mysql+pymysql://username:password@host:port/database_name
+   
+   # For local MySQL:
+   mysql+pymysql://root:password@localhost:3306/wildeditor_db
+   
+   # For remote MySQL:
+   mysql+pymysql://user:pass@mysql.example.com:3306/dbname
+   ```
+
+2. **Check container logs for database errors:**
+   ```bash
+   # On your server, check container logs
+   sudo docker logs wildeditor-backend
+   
+   # Look for database connection errors like:
+   # - "Access denied for user"
+   # - "Unknown database"
+   # - "Can't connect to MySQL server"
+   ```
+
+3. **Test database connectivity from server:**
+   ```bash
+   # Install MySQL client on server to test connection
+   sudo apt install mysql-client
+   
+   # Test connection (replace with your credentials)
+   mysql -h your-db-host -u your-username -p your-database
+   ```
+
+4. **Common database URL issues:**
+   - Missing port number (default MySQL port is 3306)
+   - Wrong username/password
+   - Database name doesn't exist
+   - Firewall blocking database port
+   - SSL/TLS configuration issues
