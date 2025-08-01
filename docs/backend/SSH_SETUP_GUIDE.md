@@ -144,6 +144,40 @@ For production deployments, it's more secure to grant only specific sudo permiss
 
 ## Troubleshooting
 
+### Common CI/CD SSH Issues
+
+If you're getting "Permission denied (publickey,password)" errors in GitHub Actions:
+
+1. **Verify GitHub Secrets are set correctly:**
+   - `PRODUCTION_SSH_KEY`: Contains the complete private key (including header/footer)
+   - `PRODUCTION_HOST`: Your server's IP or domain
+   - `PRODUCTION_USER`: The correct username (e.g., `wildedit`, `ubuntu`, `root`)
+
+2. **Check the private key format in GitHub Secrets:**
+   ```
+   -----BEGIN OPENSSH PRIVATE KEY-----
+   [key content]
+   -----END OPENSSH PRIVATE KEY-----
+   ```
+   Make sure there are no extra spaces or missing newlines.
+
+3. **Test SSH connection locally first:**
+   ```bash
+   # Test with the same key and user that CI/CD will use
+   ssh -i ~/.ssh/wildeditor_deploy wildedit@your-server-ip
+   ```
+
+4. **Common permission issues on server:**
+   ```bash
+   # Fix permissions on server
+   sudo chmod 700 /home/wildedit/.ssh
+   sudo chmod 600 /home/wildedit/.ssh/authorized_keys
+   sudo chown -R wildedit:wildedit /home/wildedit/.ssh
+   
+   # Verify the authorized_keys content
+   sudo cat /home/wildedit/.ssh/authorized_keys
+   ```
+
 ### Check SSH service on server:
 ```bash
 sudo systemctl status ssh
@@ -168,4 +202,16 @@ ssh -v -i ~/.ssh/wildeditor_deploy user@server
 sudo tail -f /var/log/auth.log
 # or
 sudo journalctl -f -u ssh
+```
+
+### Debug GitHub Actions SSH Issues
+
+Add this debug step to your workflow to troubleshoot:
+```yaml
+- name: Debug SSH setup
+  run: |
+    echo "Testing SSH key fingerprint..."
+    ssh-keygen -lf ~/.ssh/id_rsa || echo "No default key"
+    echo "Testing connection with verbose output..."
+    ssh -vvv -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} "echo 'test'" || true
 ```
