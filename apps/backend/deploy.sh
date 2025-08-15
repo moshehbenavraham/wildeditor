@@ -10,7 +10,7 @@ echo "=============================================="
 
 # Configuration
 DOCKER_IMAGE="wildeditor-backend"
-CONTAINER_NAME="wildeditor-backend-local"
+CONTAINER_NAME="wildeditor-backend-local" 
 PORT=${PORT:-8000}
 
 # Functions
