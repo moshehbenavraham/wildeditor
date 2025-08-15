@@ -8,7 +8,7 @@ from ..models.path import Path
 from ..schemas.path import (
     PathCreate, PathResponse, PathUpdate, get_path_type_name,
     PATH_TYPES, PATH_ROAD, PATH_DIRT_ROAD, PATH_GEOGRAPHIC, PATH_RIVER, PATH_STREAM,
-    PATH_SECTOR_MAPPING
+    PATH_SECTOR_MAPPING 
 )
 from ..config.config_database import get_db
 
